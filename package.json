@@ -1,0 +1,16 @@
+{
+  "name": "telegram-bot",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:marscolony-io/telegram-bot.git",
+  "author": "crystalbit <crystalbit@mail.ru>",
+  "license": "MIT",
+  "scripts": {
+    "start": "ts-node src/"
+  },
+  "dependencies": {
+    "telegraf": "^4.5.2",
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
+  }
+}
