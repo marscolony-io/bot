@@ -18,7 +18,7 @@ export const getStats = async (): Promise<string> => {
   ]);
   const supply = (_supply * 10 ** -18).toFixed(3);
   return `
-TESTNET current supply: ${supply.replace(/\./g, '\\.')} CLNY
-\`${_MCSupply}\` lands already minted
+TESTNET current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
+\`${_MCSupply}\` TESTNET lands already minted
   `.trim();
 };
