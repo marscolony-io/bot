@@ -10,6 +10,7 @@ const clny = new web3.eth.Contract(CLNY.abi as AbiItem[], CLNYAddress);
 const mc = new web3.eth.Contract(MC.abi as AbiItem[], NFT);
 
 // TODO caching
+let lastMcSupply: number = 0;
 
 export const getStats = async (): Promise<string> => {
   try {
@@ -18,10 +19,11 @@ export const getStats = async (): Promise<string> => {
       mc.methods.totalSupply().call(),
     ]);
     const supply = (_supply * 10 ** -18).toFixed(3);
+    lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimew we get old data
     return `
   Current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
   \\(including 100 000 CLNY for initial liquidity\\)
-  \`${_MCSupply}\` Land Plots already minted
+  \`${lastMcSupply}\` Land Plots already minted
 
   commands: /contract /stats
     `.trim();
