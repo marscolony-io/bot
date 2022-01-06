@@ -1,16 +1,18 @@
-import { TESTNET_CLNY, TESTNET_GM, TESTNET_NFT } from "../values";
+import { TESTNET_CLNY, TESTNET_GM, TESTNET_NFT, CLNY, NFT, GM } from "../values";
 
 export const CONTRACT_TEXT = `
 CONTRACTS:
 
-TESTNET NFT ERC721:
-\`${TESTNET_NFT}\`
+Land Plots MC ERC721:
+\`${NFT}\`
 
-TESTNET CLNY ERC20:
-\`${TESTNET_CLNY}\`
+CLNY Token ERC20:
+\`${CLNY}\`
 
-TESTNET Game Manager:
+Game Manager:
 \`${TESTNET_GM}\`
 
-TESTNET explorer: https://explorer\\.pops\\.one/
+Harmony explorer: https://explorer\\.harmony\\.one/
+
+commands: /contract /stats
 `.trim();
