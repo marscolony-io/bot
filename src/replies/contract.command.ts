@@ -10,7 +10,7 @@ CLNY Token ERC20:
 \`${CLNY}\`
 
 Game Manager:
-\`${TESTNET_GM}\`
+\`${GM}\`
 
 Harmony explorer: https://explorer\\.harmony\\.one/
 
