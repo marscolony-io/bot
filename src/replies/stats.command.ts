@@ -23,8 +23,8 @@ export const getStats = async (): Promise<string> => {
     return `
 Current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
 \`100 000\` CLNY were minted for initial liquidity
-\`${lastMcSupply}\` Land Plots already minted
-\`${21000 - lastMcSupply}\` Land Plots are available
+\`${(lastMcSupply / 21000 * 100).toFixed(1)}\`% of Land Plots already minted
+\`${21000 - lastMcSupply}\` Land Plots available
 
 commands: /contract /stats
     `.trim();
