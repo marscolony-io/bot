@@ -21,11 +21,12 @@ export const getStats = async (): Promise<string> => {
     const supply = (_supply * 10 ** -18).toFixed(3);
     lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimew we get old data
     return `
-  Current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
-  \\(including 100 000 CLNY for initial liquidity\\)
-  \`${lastMcSupply}\` Land Plots already minted
+Current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
+\`100 000\` CLNY were minted for initial liquidity and will be burned later ASAP
+\`${lastMcSupply}\` Land Plots already minted
+\`${21000 - lastMcSupply}\` Land Plots are available
 
-  commands: /contract /stats
+commands: /contract /stats
     `.trim();
   } catch (error) {
     console.log(error);
