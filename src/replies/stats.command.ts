@@ -22,7 +22,7 @@ export const getStats = async (): Promise<string> => {
     lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimew we get old data
     return `
 Current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
-\`100 000\` CLNY were minted for initial liquidity and will be burned later ASAP
+\`100 000\` CLNY were minted for initial liquidity
 \`${lastMcSupply}\` Land Plots already minted
 \`${21000 - lastMcSupply}\` Land Plots are available
 
