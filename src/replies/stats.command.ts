@@ -3,6 +3,7 @@ import { CLNY as CLNYAddress, NFT } from '../values';
 import CLNY from './CLNY.json';
 // import MC from './MC.json';
 import { AbiItem } from 'web3-utils';
+import { footer } from './footer';
 
 const web3 = new Web3('https://api.harmony.one');
 
@@ -24,7 +25,7 @@ export const getStats = async (): Promise<string> => {
 Current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
 \`100 000\` CLNY were minted for initial liquidity
 
-commands: /contract /stats
+${footer}
     `.trim();
   } catch (error) {
     console.log(error);
