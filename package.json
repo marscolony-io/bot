@@ -12,6 +12,7 @@
     "build-test": "tsc src/tests/stats.test.ts --outDir build --resolveJsonModule --esModuleInterop"
   },
   "dependencies": {
+    "axios": "^0.24.0",
     "telegraf": "^4.5.2",
     "ts-node": "^10.4.0",
     "typescript": "^4.5.4",

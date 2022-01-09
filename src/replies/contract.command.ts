@@ -1,4 +1,5 @@
-import { TESTNET_CLNY, TESTNET_GM, TESTNET_NFT, CLNY, NFT, GM } from "../values";
+import { CLNY, NFT, GM } from "../values";
+import { footer } from "./footer";
 
 export const CONTRACT_TEXT = `
 CONTRACTS:
@@ -14,5 +15,5 @@ Game Manager:
 
 Harmony explorer: https://explorer\\.harmony\\.one/
 
-commands: /contract /stats
+${footer}
 `.trim();
