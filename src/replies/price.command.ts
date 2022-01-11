@@ -23,7 +23,7 @@ export const price = async (): Promise<string> => {
   if (clnyData.status < 300) {
     return `
 1 CLNY \\= \`${priceVal.toFixed(3)}\` ONE
-1 ONE \\= \`${priceONE.toFixed(3)}\`$ \\(WONE-1USDC pair\\)
+1 ONE \\= \`${priceONE.toFixed(3)}\`$ \\(WONE\\-1USDC pair\\)
 1 CLNY \\= \`${priceDollars.toFixed(3)}\`$
 
 ${footer}
