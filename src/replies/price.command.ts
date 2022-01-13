@@ -20,6 +20,8 @@ export const price = async (): Promise<string> => {
   const priceONE = usdcData.data[0].Token_1_reserve / usdcData.data[0].Token_2_reserve;
   const priceDollars = priceVal * priceONE;
 
+  return 'Temporarily stopped';
+
   if (clnyData.status < 300) {
     return `
 1 CLNY \\= \`${priceVal.toFixed(3)}\` ONE
