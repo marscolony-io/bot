@@ -20,7 +20,7 @@ export const price = async (): Promise<string> => {
   const priceONE = usdcData.data[0].Token_1_reserve / usdcData.data[0].Token_2_reserve;
   const priceDollars = priceVal * priceONE;
 
-  return 'https://dexscreener.com/harmony/0xcd818813f038a4d1a27c84d24d74bbc21551fa83';
+  return 'https:\\/\\/dexscreener.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83';
 
   if (clnyData.status < 300) {
     return `
