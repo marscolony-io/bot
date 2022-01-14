@@ -1,1 +1,1 @@
-export const footer = 'commands: /nft /contract /stats /price /wp';
+export const footer = 'commands: /contract /stats /price /wp';

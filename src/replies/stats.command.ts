@@ -14,22 +14,22 @@ const clny = new web3.eth.Contract(CLNY.abi as AbiItem[], CLNYAddress);
 // let lastMcSupply: number = 0;
 
 export const getStats = async (): Promise<string> => {
-    try {
-        const [_supply] = await Promise.all([
-            clny.methods.totalSupply().call(),
-            // mc.methods.totalSupply().call(),
-        ]);
-        const supply = (_supply * 10 ** -18).toFixed(3);
-        // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
+  try {
+    const [_supply] = await Promise.all([
+      clny.methods.totalSupply().call(),
+      // mc.methods.totalSupply().call(),
+    ]);
+    const supply = (_supply * 10 ** -18).toFixed(3);
+    // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
 
-        return `
+    return `
 Current supply: \`${supply.replace(/\./g, '\\.')} CLNY\`
 \`100 000\` CLNY were minted for initial liquidity
 
 ${footer}
     `.trim();
-    } catch (error) {
-        console.log(error);
-        return 'Error';
-    }
+  } catch (error) {
+    console.log(error);
+    return 'Error';
+  }
 };
