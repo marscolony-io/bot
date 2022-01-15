@@ -1,12 +1,26 @@
 import axios from 'axios';
 import Web3 from 'web3';
-import { NFT } from '../values';
+import { MarsColonyNFT, NFTKeysMarketplaceAddress } from '../values';
 import { footer } from './footer';
-import NFTKeys from './NFTKEYS.json';
+import NFTKeysMarketplaceABI from './NFTKeysMarketplaceABI.json';
 import { AbiItem } from 'web3-utils';
 
 const web3 = new Web3('https://api.harmony.one');
-const nftkeys = new web3.eth.Contract(NFTKeys.abi as AbiItem[], NFT);
+const nftkeysMarketplaceContract = new web3.eth.Contract(
+  NFTKeysMarketplaceABI as AbiItem[],
+  NFTKeysMarketplaceAddress
+);
+
+interface Listing {
+  tokenId: number;
+  value: number;
+  seller: string;
+  expireTimestamp: number;
+}
+
+// global variables for caching
+let latestFloorPrice = 0;
+let latestFloorPriceDateTime = new Date();
 
 export const getPrice = async (): Promise<string> => {
   const USDC: [string, number] = [
@@ -38,29 +52,76 @@ export const getPrice = async (): Promise<string> => {
     usdcData.data[0].Token_1_reserve / usdcData.data[0].Token_2_reserve;
   const priceDollars = priceVal * priceONE;
 
-  try {
-    const [_mcData] = await Promise.all([
-      nftkeys.methods.numTokenListings(NFT).call(),
-    ]);
-    // const supply = (_supply * 10 ** -18).toFixed(3);
-    // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
+  const currDateTime = new Date();
+  if (
+    latestFloorPrice === 0 ||
+    currDateTime.getTime() - latestFloorPriceDateTime.getTime() > 1000 * 60
+    // 1min
+  ) {
+    try {
+      const numListings = await nftkeysMarketplaceContract.methods
+        .numTokenListings(MarsColonyNFT)
+        .call();
+      // const supply = (_supply * 10 ** -18).toFixed(3);
+      // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
 
-    console.log(_mcData);
+      const numListingsInt = parseInt(numListings);
 
-    return `
+      const batchSize = 20;
+      let currBatchCount = 0;
+
+      const divideConst = 1000000000000000000;
+      let floorPrice = divideConst; // what to set?
+      let startingIdx = 1 + currBatchCount * batchSize;
+      while (startingIdx <= numListingsInt) {
+        const tokenListings: Listing[] =
+          await nftkeysMarketplaceContract.methods
+            .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
+            .call();
+
+        for (const y of tokenListings) {
+          const price = y.value / divideConst;
+          if (price < floorPrice && price !== 0) {
+            floorPrice = price;
+          }
+        }
+
+        currBatchCount++;
+        startingIdx = 1 + currBatchCount * batchSize;
+      }
+
+      latestFloorPriceDateTime = currDateTime;
+      latestFloorPrice = floorPrice;
+
+      return `
 View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
+
+Latest floor price: ${latestFloorPrice} CLNY
+
+Last Updated: ${latestFloorPriceDateTime.toLocaleString()}
 
 ${footer}
     `.trim();
-  } catch (error) {
-    console.log(error);
-    return `
+    } catch (error) {
+      console.log(error);
+      return `
 View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
     
 Error fetching NFT floor
 
 ${footer}
     `;
+    }
+  } else {
+    return `
+View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
+
+Latest floor price: ${latestFloorPrice} CLNY
+
+Last Updated: ${latestFloorPriceDateTime.toLocaleString()}
+
+${footer}
+    `.trim();
   }
 
   if (clnyData.status < 300) {
