@@ -1,2 +1,1 @@
-export const footer =
-  'commands: /contract /stats /price (may take a while) /wp';
+export const footer = 'commands: /contract /stats /price \\(may be slow\\) /wp';
