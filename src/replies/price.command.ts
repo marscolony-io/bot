@@ -53,6 +53,8 @@ export const getPrice = async (): Promise<string> => {
   const priceDollars = priceVal * priceONE;
 
   const currDateTime = new Date();
+  let errorFetchingFloor = false;
+
   if (
     latestFloorPrice === 0 ||
     currDateTime.getTime() - latestFloorPriceDateTime.getTime() > 1000 * 60
@@ -69,10 +71,10 @@ export const getPrice = async (): Promise<string> => {
 
       const batchSize = 20;
       let currBatchCount = 0;
-
       const divideConst = 1000000000000000000;
-      let floorPrice = divideConst; // what to set?
+      let floorPrice = divideConst; // what to set as starting floor - max value possible?
       let startingIdx = 1 + currBatchCount * batchSize;
+
       while (startingIdx <= numListingsInt) {
         const tokenListings: Listing[] =
           await nftkeysMarketplaceContract.methods
@@ -92,33 +94,27 @@ export const getPrice = async (): Promise<string> => {
 
       latestFloorPriceDateTime = currDateTime;
       latestFloorPrice = floorPrice;
-
-      return `
-View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
-
-Latest floor price: ${latestFloorPrice} CLNY
-
-Last Updated: ${latestFloorPriceDateTime.toLocaleString()}
-
-${footer}
-    `.trim();
     } catch (error) {
       console.log(error);
-      return `
-View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
-    
-Error fetching NFT floor
-
-${footer}
-    `;
+      errorFetchingFloor = true;
     }
-  } else {
+  }
+
+  if (latestFloorPrice > 0) {
     return `
 View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
 
 Latest floor price: ${latestFloorPrice} CLNY
 
-Last Updated: ${latestFloorPriceDateTime.toLocaleString()}
+Last updated: ${latestFloorPriceDateTime.toLocaleString()}
+
+${footer}
+    `.trim();
+  } else {
+    return `
+View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
+    
+Error fetching NFT floor
 
 ${footer}
     `.trim();

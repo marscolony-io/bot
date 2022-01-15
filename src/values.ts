@@ -9,6 +9,6 @@ export const CLNY = '0x0D625029E21540aBdfAFa3BFC6FD44fB4e0A66d0';
 export const MarsColonyNFT = '0x0bC0cdFDd36fc411C83221A348230Da5D3DfA89e';
 
 export const NFTKeysMarketplaceAddress =
-  '0x42813a05ec9c7e17aF2d1499F9B0a591B7619aBF';
+  '0x42813a05ec9c7e17aF2d1499F9B0a591B7619aBF'; // from https://nftkey.app/marketplace-contracts/
 
 export const GM = '0x0D112a449D23961d03E906572D8ce861C441D6c3';
