@@ -2,12 +2,12 @@ import axios from 'axios';
 import Web3 from 'web3';
 import { MarsColonyNFT, NFTKeysMarketplaceAddress } from '../values';
 import { footer } from './footer';
-import NFTKeysMarketplaceABI from './NFTKeysMarketplaceABI.json';
+import NFTKeyMarketplaceABI from './NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
 import { AbiItem } from 'web3-utils';
 
 const web3 = new Web3('https://api.harmony.one');
 const nftkeysMarketplaceContract = new web3.eth.Contract(
-  NFTKeysMarketplaceABI as AbiItem[],
+  NFTKeyMarketplaceABI as AbiItem[],
   NFTKeysMarketplaceAddress
 );
 
