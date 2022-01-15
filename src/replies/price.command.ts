@@ -52,61 +52,64 @@ export const getPrice = async (): Promise<string> => {
     usdcData.data[0].Token_1_reserve / usdcData.data[0].Token_2_reserve;
   const priceDollars = priceVal * priceONE;
 
-  const currDateTime = new Date();
-  let errorFetchingFloor = false;
+  const numMinutesCache = 1;
+  const batchSize = 20;
+  const divideConst = 1000000000000000000;
 
-  if (
-    latestFloorPrice === 0 ||
-    currDateTime.getTime() - latestFloorPriceDateTime.getTime() > 1000 * 60
-    // 1min
-  ) {
-    try {
-      const numListings = await nftkeysMarketplaceContract.methods
-        .numTokenListings(MarsColonyNFT)
-        .call();
-      // const supply = (_supply * 10 ** -18).toFixed(3);
-      // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
+  // cache every numMinutesCache in background (not upon query)
+  (async () => {
+    while (true) {
+      try {
+        const numListings = await nftkeysMarketplaceContract.methods
+          .numTokenListings(MarsColonyNFT)
+          .call();
+        // const supply = (_supply * 10 ** -18).toFixed(3);
+        // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
 
-      const numListingsInt = parseInt(numListings);
+        const numListingsInt = parseInt(numListings);
 
-      const batchSize = 20;
-      let currBatchCount = 0;
-      const divideConst = 1000000000000000000;
-      let floorPrice = divideConst; // what to set as starting floor - max value possible?
-      let startingIdx = 1 + currBatchCount * batchSize;
+        let currBatchCount = 0;
+        let floorPrice = Number.MAX_VALUE;
+        let startingIdx = 1 + currBatchCount * batchSize;
 
-      while (startingIdx <= numListingsInt) {
-        const tokenListings: Listing[] =
-          await nftkeysMarketplaceContract.methods
-            .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
-            .call();
+        while (startingIdx <= numListingsInt) {
+          const tokenListings: Listing[] =
+            await nftkeysMarketplaceContract.methods
+              .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
+              .call();
 
-        for (const y of tokenListings) {
-          const price = y.value / divideConst;
-          if (price < floorPrice && price !== 0) {
-            floorPrice = price;
+          for (const y of tokenListings) {
+            const price = y.value / divideConst;
+            if (price < floorPrice && price !== 0) {
+              floorPrice = price;
+            }
           }
+
+          currBatchCount++;
+          startingIdx = 1 + currBatchCount * batchSize;
         }
 
-        currBatchCount++;
-        startingIdx = 1 + currBatchCount * batchSize;
+        latestFloorPriceDateTime = new Date();
+        latestFloorPrice = floorPrice;
+      } catch (error) {
+        console.log(error);
       }
-
-      latestFloorPriceDateTime = currDateTime;
-      latestFloorPrice = floorPrice;
-    } catch (error) {
-      console.log(error);
-      errorFetchingFloor = true;
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000 * 60 * numMinutesCache)
+      );
     }
-  }
+  })();
 
-  if (latestFloorPrice > 0) {
+  const latestCachedDataToShowInMinutes = 15;
+  if (
+    latestFloorPrice > 0 &&
+    new Date().getTime() - latestFloorPriceDateTime.getTime() <
+      1000 * 60 * latestCachedDataToShowInMinutes
+  ) {
     return `
 View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
 
 Latest floor price: ${latestFloorPrice} CLNY
-
-Last updated: ${latestFloorPriceDateTime.toLocaleString()}
 
 ${footer}
     `.trim();
