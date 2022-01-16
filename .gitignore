@@ -2,3 +2,4 @@ node_modules
 src/secrets.ts
 build/*
 !build/.gitkeep
+.vscode

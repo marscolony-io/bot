@@ -12,3 +12,8 @@ export const NFTKeysMarketplaceAddress =
   '0x42813a05ec9c7e17aF2d1499F9B0a591B7619aBF'; // from https://nftkey.app/marketplace-contracts/
 
 export const GM = '0x0D112a449D23961d03E906572D8ce861C441D6c3';
+
+export const WONE_CONTRACT = '0xcf664087a5bb0237a0bad6742852ec6c8d69a27a';
+export const USDC_CONTRACT = '0x985458e523db3d53125813ed68c274899e9dfab4';
+export const CLNY_PAIR = '0xcd818813f038a4d1a27c84d24d74bbc21551fa83';
+export const USDC_PAIR = '0xbf255d8c30dbab84ea42110ea7dc870f01c0013a';
