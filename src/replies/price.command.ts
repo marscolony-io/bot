@@ -54,7 +54,7 @@ export const getPrice = async (): Promise<string> => {
 
   const numMinutesCache = 1;
   const batchSize = 20;
-  const divideConst = 1000000000000000000;
+  const divideConst = 1e18;
 
   // cache every numMinutesCache in background (not upon query)
   (async () => {
