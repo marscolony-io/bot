@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "esnext",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -20,10 +16,6 @@
     "noEmit": true,
     "jsx": "react-jsx"
   },
-  "include": [
-    "src"
-  ],
-  "files": [
-    "src/typings.d.ts"
-  ]
+  "include": ["src"],
+  "files": ["src/typings.d.ts"]
 }

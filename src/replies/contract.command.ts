@@ -1,11 +1,11 @@
-import { CLNY, NFT, GM } from "../values";
-import { footer } from "./footer";
+import { CLNY, GM, MarsColonyNFT } from '../values';
+import { footer } from './footer';
 
 export const CONTRACT_TEXT = `
 CONTRACTS:
 
 Land Plots MC ERC721:
-\`${NFT}\`
+\`${MarsColonyNFT}\`
 
 CLNY Token ERC20:
 \`${CLNY}\`
