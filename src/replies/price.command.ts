@@ -1,14 +1,38 @@
 // import axios from 'axios';
 import Web3 from 'web3';
-import { MarsColonyNFT, NFTKeysMarketplaceAddress } from '../values';
+import {
+  CLNY,
+  MarsColonyNFT,
+  NFTKeysMarketplaceAddress,
+  WONE_CONTRACT,
+  CLNY_PAIR,
+  USDC_CONTRACT,
+  USDC_PAIR,
+} from '../values';
 import { footer } from './footer';
 import NFTKeyMarketplaceABI from './NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
+import ClnyArtefact from './CLNY.json';
 import { AbiItem } from 'web3-utils';
 
 const web3 = new Web3('https://api.harmony.one');
 const nftkeysMarketplaceContract = new web3.eth.Contract(
   NFTKeyMarketplaceABI as AbiItem[],
   NFTKeysMarketplaceAddress
+);
+
+const CLNYTokenContract = new web3.eth.Contract(
+  ClnyArtefact.abi as AbiItem[],
+  CLNY
+);
+
+const WoneTokenContract = new web3.eth.Contract(
+  ClnyArtefact.abi as AbiItem[], // ERC20
+  WONE_CONTRACT
+);
+
+const UsdcTokenContract = new web3.eth.Contract(
+  ClnyArtefact.abi as AbiItem[], // ERC20
+  USDC_CONTRACT
 );
 
 interface Listing {
@@ -22,123 +46,101 @@ interface Listing {
 let latestFloorPrice = 0;
 let latestFloorPriceDateTime = new Date();
 
-export const getPrice = async (): Promise<string> => {
-  const USDC: [string, number] = [
-    '0xbf255d8c30dbab84ea42110ea7dc870f01c0013a',
-    1666600000,
-  ];
-  const CLNY: [string, number] = [
-    '0xcd818813f038a4d1a27c84d24d74bbc21551fa83',
-    1666600000,
-  ];
-  const pairData = ([ticker, chainId]: [string, number]) =>
-    `https://api2.sushipro.io/?action=get_pair&chainID=${chainId}&pair=${ticker}`;
+const numMinutesCache = 1;
+const batchSize = 20;
+const divideConst = 1e18;
 
-  // const usdcData = await axios.get(pairData(USDC));
-  // const clnyData = await axios.get(pairData(CLNY));
+// cache every numMinutesCache in background (not upon query)
+(async () => {
+  while (true) {
+    try {
+      const numListings = await nftkeysMarketplaceContract.methods
+        .numTokenListings(MarsColonyNFT)
+        .call();
 
-  // if (
-  //   !usdcData.data?.[0]?.Token_1_reserve ||
-  //   !clnyData.data?.[0]?.Token_1_reserve
-  // ) {
-  //   return 'Error #1';
-  // }
+      const numListingsInt = parseInt(numListings);
 
-  // const priceVal =
-  //   clnyData.data[0].Token_2_reserve / clnyData.data[0].Token_1_reserve;
-  // const priceONE =
-  //   usdcData.data[0].Token_1_reserve / usdcData.data[0].Token_2_reserve;
-  // const priceDollars = priceVal * priceONE;
+      let currBatchCount = 0;
+      let floorPrice = Number.MAX_VALUE;
+      let startingIdx = 1 + currBatchCount * batchSize;
 
-  const numMinutesCache = 1;
-  const batchSize = 20;
-  const divideConst = 1e18;
+      while (startingIdx <= numListingsInt) {
+        try {
+          const tokenListings: Listing[] =
+            await nftkeysMarketplaceContract.methods
+              .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
+              .call();
 
-  // cache every numMinutesCache in background (not upon query)
-  (async () => {
-    while (true) {
-      try {
-        const numListings = await nftkeysMarketplaceContract.methods
-          .numTokenListings(MarsColonyNFT)
-          .call();
-        // const supply = (_supply * 10 ** -18).toFixed(3);
-        // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
-
-        const numListingsInt = parseInt(numListings);
-
-        let currBatchCount = 0;
-        let floorPrice = Number.MAX_VALUE;
-        let startingIdx = 1 + currBatchCount * batchSize;
-
-        while (startingIdx <= numListingsInt) {
-          try {
-            const tokenListings: Listing[] =
-              await nftkeysMarketplaceContract.methods
-                .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
-                .call();
-
-            for (const y of tokenListings) {
-              const price = y.value / divideConst;
-              if (price < floorPrice && price !== 0) {
-                floorPrice = price;
-              }
+          for (const y of tokenListings) {
+            const price = y.value / divideConst;
+            if (price < floorPrice && price !== 0) {
+              floorPrice = price;
             }
-
-            currBatchCount++;
-            startingIdx = 1 + currBatchCount * batchSize;
-          } catch (error) {
-            console.log(error);
-            await new Promise((resolve) => setTimeout(resolve, 1000)); // wait before retry if looping through listings fails
-            continue;
           }
-        }
 
-        latestFloorPriceDateTime = new Date();
-        latestFloorPrice = floorPrice;
-      } catch (error) {
-        // should not have error unless numTokenListings has error
-        // any getTokenListings errors should be caught within inner try/catch
-        console.log(error);
+          currBatchCount++;
+          startingIdx = 1 + currBatchCount * batchSize;
+        } catch (error) {
+          console.log(error);
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // wait before retry if looping through listings fails
+          continue;
+        }
       }
 
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000 * 60 * numMinutesCache)
-      );
+      latestFloorPriceDateTime = new Date();
+      latestFloorPrice = floorPrice;
+    } catch (error) {
+      // should not have error unless numTokenListings has error
+      // any getTokenListings errors should be caught within inner try/catch
+      console.log(error);
     }
-  })();
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 * 60 * numMinutesCache)
+    );
+  }
+})();
+
+export const getPrice = async (): Promise<string> => {
+  const clnyInLiquidity =
+    (await CLNYTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
+  const oneInLiquidity =
+    (await WoneTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
+  const usdcInUsdcLiquidity =
+    (await UsdcTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-6;
+  const oneInUsdcLiquidity =
+    (await WoneTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-18;
+
+  const priceClny = oneInLiquidity / clnyInLiquidity;
+  const priceOne = usdcInUsdcLiquidity / oneInUsdcLiquidity;
+  const priceDollars = priceClny * priceOne;
+
+  const priceResponse = `
+1 CLNY \\= \`${priceClny.toFixed(3)}\` ONE
+1 ONE \\= \`${priceOne.toFixed(3)}\`$ \\(WONE\\-1USDC pair\\)
+1 CLNY \\= \`${priceDollars.toFixed(3)}\`$
+[Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)
+  `.trim();
 
   const latestCachedDataToShowInMinutes = 15;
+  let floorResponse = '';
   if (
     latestFloorPrice > 0 &&
     new Date().getTime() - latestFloorPriceDateTime.getTime() <
       1000 * 60 * latestCachedDataToShowInMinutes
   ) {
-    return `
-View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
-
-NFT floor price: ${latestFloorPrice.toFixed(0)} ONE
-
-${footer}
-    `.trim();
+    floorResponse = `NFT floor price: ${latestFloorPrice.toFixed(0)} ONE \\(${(
+      priceOne * latestFloorPrice
+    ).toFixed(0)}$\\)`;
   } else {
-    return `
-View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
-    
-Error fetching NFT floor price
-
-${footer}
-    `.trim();
+    floorResponse = 'Error fetching NFT floor price';
   }
 
-//   if (clnyData.status < 300) {
-//     return `
-// 1 CLNY \\= \`${priceVal.toFixed(3)}\` ONE
-// 1 ONE \\= \`${priceONE.toFixed(3)}\`$ \\(WONE\\-1USDC pair\\)
-// 1 CLNY \\= \`${priceDollars.toFixed(3)}\`$
+  return `
+${priceResponse}
 
-// ${footer}
-//       `.trim();
-//   } else {
-//     return 'Error #2';
-//   }
+${floorResponse}
+
+${footer}
+  `.trim();
 };
