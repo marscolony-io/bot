@@ -1,4 +1,4 @@
-import axios from 'axios';
+// import axios from 'axios';
 import Web3 from 'web3';
 import { MarsColonyNFT, NFTKeysMarketplaceAddress } from '../values';
 import { footer } from './footer';
@@ -34,23 +34,21 @@ export const getPrice = async (): Promise<string> => {
   const pairData = ([ticker, chainId]: [string, number]) =>
     `https://api2.sushipro.io/?action=get_pair&chainID=${chainId}&pair=${ticker}`;
 
-  const usdcData = await axios.get(pairData(USDC));
-  const clnyData = await axios.get(pairData(CLNY));
+  // const usdcData = await axios.get(pairData(USDC));
+  // const clnyData = await axios.get(pairData(CLNY));
 
-  if (
-    !usdcData.data?.[0]?.Token_1_reserve ||
-    !clnyData.data?.[0]?.Token_1_reserve
-  ) {
-    return 'Error #1';
-  }
-  // console.log(harmonyData.data);
-  // console.log(clnyData.data);
+  // if (
+  //   !usdcData.data?.[0]?.Token_1_reserve ||
+  //   !clnyData.data?.[0]?.Token_1_reserve
+  // ) {
+  //   return 'Error #1';
+  // }
 
-  const priceVal =
-    clnyData.data[0].Token_2_reserve / clnyData.data[0].Token_1_reserve;
-  const priceONE =
-    usdcData.data[0].Token_1_reserve / usdcData.data[0].Token_2_reserve;
-  const priceDollars = priceVal * priceONE;
+  // const priceVal =
+  //   clnyData.data[0].Token_2_reserve / clnyData.data[0].Token_1_reserve;
+  // const priceONE =
+  //   usdcData.data[0].Token_1_reserve / usdcData.data[0].Token_2_reserve;
+  // const priceDollars = priceVal * priceONE;
 
   const numMinutesCache = 1;
   const batchSize = 20;
@@ -118,7 +116,7 @@ export const getPrice = async (): Promise<string> => {
     return `
 View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
 
-Latest floor price: ${latestFloorPrice} CLNY
+NFT floor price: ${latestFloorPrice.toFixed(0)} ONE
 
 ${footer}
     `.trim();
@@ -126,21 +124,21 @@ ${footer}
     return `
 View current prices on: https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83
     
-Error fetching NFT floor
+Error fetching NFT floor price
 
 ${footer}
     `.trim();
   }
 
-  if (clnyData.status < 300) {
-    return `
-1 CLNY \\= \`${priceVal.toFixed(3)}\` ONE
-1 ONE \\= \`${priceONE.toFixed(3)}\`$ \\(WONE\\-1USDC pair\\)
-1 CLNY \\= \`${priceDollars.toFixed(3)}\`$
+//   if (clnyData.status < 300) {
+//     return `
+// 1 CLNY \\= \`${priceVal.toFixed(3)}\` ONE
+// 1 ONE \\= \`${priceONE.toFixed(3)}\`$ \\(WONE\\-1USDC pair\\)
+// 1 CLNY \\= \`${priceDollars.toFixed(3)}\`$
 
-${footer}
-      `.trim();
-  } else {
-    return 'Error #2';
-  }
+// ${footer}
+//       `.trim();
+//   } else {
+//     return 'Error #2';
+//   }
 };
