@@ -102,45 +102,49 @@ const divideConst = 1e18;
 })();
 
 export const getPrice = async (): Promise<string> => {
-  const clnyInLiquidity =
-    (await CLNYTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
-  const oneInLiquidity =
-    (await WoneTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
-  const usdcInUsdcLiquidity =
-    (await UsdcTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-6;
-  const oneInUsdcLiquidity =
-    (await WoneTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-18;
+  try {
+    const clnyInLiquidity =
+      (await CLNYTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
+    const oneInLiquidity =
+      (await WoneTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
+    const usdcInUsdcLiquidity =
+      (await UsdcTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-6;
+    const oneInUsdcLiquidity =
+      (await WoneTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-18;
 
-  const priceClny = oneInLiquidity / clnyInLiquidity;
-  const priceOne = usdcInUsdcLiquidity / oneInUsdcLiquidity;
-  const priceDollars = priceClny * priceOne;
+    const priceClny = oneInLiquidity / clnyInLiquidity;
+    const priceOne = usdcInUsdcLiquidity / oneInUsdcLiquidity;
+    const priceDollars = priceClny * priceOne;
 
-  const priceResponse = `
+    const priceResponse = `
 1 CLNY \\= \`${priceClny.toFixed(3)}\` ONE
 1 ONE \\= \`${priceOne.toFixed(3)}\`$ \\(WONE\\-1USDC pair\\)
 1 CLNY \\= \`${priceDollars.toFixed(3)}\`$
 [Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)
-  `.trim();
+    `.trim();
 
-  const latestCachedDataToShowInMinutes = 15;
-  let floorResponse = '';
-  if (
-    latestFloorPrice > 0 &&
-    new Date().getTime() - latestFloorPriceDateTime.getTime() <
-      1000 * 60 * latestCachedDataToShowInMinutes
-  ) {
-    floorResponse = `NFT floor price: ${latestFloorPrice.toFixed(0)} ONE \\(${(
-      priceOne * latestFloorPrice
-    ).toFixed(0)}$\\)`;
-  } else {
-    floorResponse = 'Error fetching NFT floor price';
-  }
+    const latestCachedDataToShowInMinutes = 15;
+    let floorResponse = '';
+    if (
+      latestFloorPrice > 0 &&
+      new Date().getTime() - latestFloorPriceDateTime.getTime() <
+        1000 * 60 * latestCachedDataToShowInMinutes
+    ) {
+      floorResponse = `NFT floor price: ${latestFloorPrice.toFixed(0)} ONE \\(${(
+        priceOne * latestFloorPrice
+      ).toFixed(0)}$\\)`;
+    } else {
+      floorResponse = 'Error fetching NFT floor price';
+    }
 
-  return `
+    return `
 ${priceResponse}
 
 ${floorResponse}
 
 ${footer}
-  `.trim();
+    `.trim();
+  } catch {
+    return 'Error\n\n' + footer;
+  }
 };
