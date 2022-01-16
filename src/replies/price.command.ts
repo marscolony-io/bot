@@ -59,20 +59,20 @@ export const getPrice = async (): Promise<string> => {
   // cache every numMinutesCache in background (not upon query)
   (async () => {
     while (true) {
-      try {
-        const numListings = await nftkeysMarketplaceContract.methods
-          .numTokenListings(MarsColonyNFT)
-          .call();
-        // const supply = (_supply * 10 ** -18).toFixed(3);
-        // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
+      const numListings = await nftkeysMarketplaceContract.methods
+        .numTokenListings(MarsColonyNFT)
+        .call();
+      // const supply = (_supply * 10 ** -18).toFixed(3);
+      // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
 
-        const numListingsInt = parseInt(numListings);
+      const numListingsInt = parseInt(numListings);
 
-        let currBatchCount = 0;
-        let floorPrice = Number.MAX_VALUE;
-        let startingIdx = 1 + currBatchCount * batchSize;
+      let currBatchCount = 0;
+      let floorPrice = Number.MAX_VALUE;
+      let startingIdx = 1 + currBatchCount * batchSize;
 
-        while (startingIdx <= numListingsInt) {
+      while (startingIdx <= numListingsInt) {
+        try {
           const tokenListings: Listing[] =
             await nftkeysMarketplaceContract.methods
               .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
@@ -87,13 +87,16 @@ export const getPrice = async (): Promise<string> => {
 
           currBatchCount++;
           startingIdx = 1 + currBatchCount * batchSize;
+        } catch (error) {
+          console.log(error);
+          await new Promise((resolve) => setTimeout(resolve, 1000)); // wait before retry if looping through listings fails
+          continue;
         }
-
-        latestFloorPriceDateTime = new Date();
-        latestFloorPrice = floorPrice;
-      } catch (error) {
-        console.log(error);
       }
+
+      latestFloorPriceDateTime = new Date();
+      latestFloorPrice = floorPrice;
+
       await new Promise((resolve) =>
         setTimeout(resolve, 1000 * 60 * numMinutesCache)
       );
