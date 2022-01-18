@@ -9,10 +9,10 @@ import {
   USDC_CONTRACT,
   USDC_PAIR,
 } from '../values';
-import { footer } from './footer';
-import NFTKeyMarketplaceABI from './NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
-import ClnyArtefact from './CLNY.json';
+import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
+import ClnyArtefact from '../resources/CLNY.json';
 import { AbiItem } from 'web3-utils';
+import { escapeDot } from '../utils/utils';
 
 const web3 = new Web3('https://api.harmony.one');
 const nftkeysMarketplaceContract = new web3.eth.Contract(
@@ -101,7 +101,7 @@ const divideConst = 1e18;
   }
 })();
 
-export const getPrice = async (): Promise<string> => {
+export const getPrice = async (footer?: any): Promise<string> => {
   try {
     const clnyInLiquidity =
       (await CLNYTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
@@ -117,9 +117,9 @@ export const getPrice = async (): Promise<string> => {
     const priceDollars = priceClny * priceOne;
 
     const priceResponse = `
-1 CLNY \\= \`${priceClny.toFixed(3)}\` ONE
-1 ONE \\= \`${priceOne.toFixed(3)}\`$ \\(WONE\\-1USDC pair\\)
-1 CLNY \\= \`${priceDollars.toFixed(3)}\`$
+1 CLNY \\= **${escapeDot(priceClny.toFixed(3))}** ONE
+1 ONE \\= **$${escapeDot(priceOne.toFixed(3))}** \\(WONE\\-1USDC pair\\)
+1 CLNY \\= **$${escapeDot(priceDollars.toFixed(3))}**
 [Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)
     `.trim();
 
@@ -130,20 +130,25 @@ export const getPrice = async (): Promise<string> => {
       new Date().getTime() - latestFloorPriceDateTime.getTime() <
         1000 * 60 * latestCachedDataToShowInMinutes
     ) {
-      floorResponse = `NFT floor price: ${latestFloorPrice.toFixed(0)} ONE \\(${(
-        priceOne * latestFloorPrice
-      ).toFixed(0)}$\\)`;
+      floorResponse = `NFT floor price: ${latestFloorPrice.toFixed(
+        0
+      )} ONE \\($${(priceOne * latestFloorPrice).toFixed(0)}\\)`;
     } else {
       floorResponse = 'Error fetching NFT floor price';
     }
 
-    return `
+    return (
+      `
 ${priceResponse}
 
 ${floorResponse}
-
+    ` +
+      (footer
+        ? `
 ${footer}
-    `.trim();
+`
+        : '')
+    ).trim();
   } catch {
     return 'Error\n\n' + footer;
   }
