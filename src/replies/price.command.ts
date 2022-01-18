@@ -130,9 +130,9 @@ export const getPrice = async (footer?: any): Promise<string> => {
       new Date().getTime() - latestFloorPriceDateTime.getTime() <
         1000 * 60 * latestCachedDataToShowInMinutes
     ) {
-      floorResponse = `NFT floor price: ${latestFloorPrice.toFixed(
+      floorResponse = `NFT floor price: **${latestFloorPrice.toFixed(
         0
-      )} ONE \\($${(priceOne * latestFloorPrice).toFixed(0)}\\)`;
+      )}** ONE \\($${(priceOne * latestFloorPrice).toFixed(0)}\\)`;
     } else {
       floorResponse = 'Error fetching NFT floor price';
     }
