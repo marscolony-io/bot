@@ -5,17 +5,24 @@
   "repository": "git@github.com:marscolony-io/telegram-bot.git",
   "author": "crystalbit <crystalbit@mail.ru>",
   "license": "MIT",
+  "type": "module",
   "scripts": {
-    "start": "node build/",
+    "start": "node --experimental-specifier-resolution=node build/",
     "test": "node build/tests/stats.test",
-    "build": "tsc src/index.ts --outDir build --resolveJsonModule --esModuleInterop",
+    "build": "tsc",
     "build-test": "tsc src/tests/stats.test.ts --outDir build --resolveJsonModule --esModuleInterop"
   },
   "dependencies": {
-    "axios": "^0.24.0",
+    "@discordx/importer": "^1.1.2",
+    "discord.js": "^13.6.0",
+    "discordx": "^9.1.12",
+    "reflect-metadata": "^0.1.13",
     "telegraf": "^4.5.2",
     "ts-node": "^10.4.0",
-    "typescript": "^4.5.4",
     "web3": "^1.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^17.0.9",
+    "typescript": "^4.5.4"
   }
 }

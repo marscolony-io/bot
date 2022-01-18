@@ -1,7 +1,8 @@
 import { CLNY, GM, MarsColonyNFT } from '../values';
-import { footer } from './footer';
 
-export const CONTRACT_TEXT = `
+export const CONTRACT_TEXT = (footer?: any) =>
+  (
+    `
 CONTRACTS:
 
 Land Plots MC ERC721:
@@ -14,6 +15,10 @@ Game Manager:
 \`${GM}\`
 
 Harmony explorer: https://explorer\\.harmony\\.one/
-
+` +
+    (footer
+      ? `
 ${footer}
-`.trim();
+`
+      : '')
+  ).trim();
