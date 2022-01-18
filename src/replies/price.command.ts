@@ -159,6 +159,19 @@ export const getPrice = async (footer?: any): Promise<string> => {
 [Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)
     `.trim();
 
+    const costBuyUpgraded = latestFloorPriceUpgraded;
+    const costBuyFloorAndUpgrade = latestFloorPrice + 30 * priceClny;
+    let cheaperStatement = '';
+    if (costBuyUpgraded < costBuyFloorAndUpgrade) {
+      cheaperStatement = `It is currently cheaper to buy an upgraded plot \\(${costBuyUpgraded} ONE\\) than to buy the cheapest plot and upgrade \\(${costBuyFloorAndUpgrade} ONE\\)`;
+    } else if (costBuyUpgraded > costBuyFloorAndUpgrade) {
+      cheaperStatement = `It is currently cheaper to buy the cheapest plot and upgrade \\(**${escapeDot(
+        costBuyFloorAndUpgrade.toFixed(3)
+      )}** ONE\\) than to buy an upgraded plot \\(**${escapeDot(
+        costBuyUpgraded.toFixed(3)
+      )}** ONE\\)`;
+    }
+
     const latestCachedDataToShowInMinutes = 15;
     let floorResponse = '';
     if (
@@ -177,6 +190,13 @@ Upgraded NFT floor price: **${latestFloorPriceUpgraded.toFixed(
         )}** ONE \\(id ${lowestUpgradedTokenId}, $${(
           priceOne * latestFloorPriceUpgraded
         ).toFixed(0)}\\)`;
+
+        if (cheaperStatement !== '') {
+          floorResponse += `
+          
+${cheaperStatement}
+          `;
+        }
       }
     } else {
       floorResponse = 'Error fetching NFT floor price';
