@@ -8,9 +8,11 @@ import {
   CLNY_PAIR,
   USDC_CONTRACT,
   USDC_PAIR,
+  GM,
 } from '../values';
 import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
 import ClnyArtefact from '../resources/CLNY.json';
+import GameManager from '../resources/GameManager.json';
 import { AbiItem } from 'web3-utils';
 import { escapeDot } from '../utils/utils';
 
@@ -35,6 +37,8 @@ const UsdcTokenContract = new web3.eth.Contract(
   USDC_CONTRACT
 );
 
+const gm = new web3.eth.Contract(GameManager.abi as AbiItem[], GM);
+
 interface Listing {
   tokenId: number;
   value: number;
@@ -42,8 +46,19 @@ interface Listing {
   expireTimestamp: number;
 }
 
+interface AttributeData {
+  speed: number;
+  earned: number;
+  baseStation: number;
+  transport: number;
+  robotAssembly: number;
+  powerProduction: number;
+}
+
 // global variables for caching
 let latestFloorPrice = 0;
+let latestFloorPriceUpgraded = 0;
+let lowestUpgradedTokenId = 0;
 let latestFloorPriceDateTime = new Date();
 
 const numMinutesCache = 1;
@@ -54,27 +69,47 @@ const divideConst = 1e18;
 (async () => {
   while (true) {
     try {
-      const numListings = await nftkeysMarketplaceContract.methods
+      const numListings: number = await nftkeysMarketplaceContract.methods
         .numTokenListings(MarsColonyNFT)
         .call();
 
-      const numListingsInt = parseInt(numListings);
-
       let currBatchCount = 0;
       let floorPrice = Number.MAX_VALUE;
+      let floorPriceUpgraded = Number.MAX_VALUE;
       let startingIdx = 1 + currBatchCount * batchSize;
 
-      while (startingIdx <= numListingsInt) {
+      while (startingIdx <= numListings) {
         try {
           const tokenListings: Listing[] =
             await nftkeysMarketplaceContract.methods
               .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
               .call();
 
-          for (const y of tokenListings) {
+          // value 0 = not listed
+          const tokenListingsListed = tokenListings.filter(
+            (t) => t.value / divideConst !== 0
+          );
+
+          const nftData: AttributeData[] = await gm.methods
+            .getAttributesMany(tokenListingsListed.map((t) => t.tokenId))
+            .call();
+
+          for (const idx in tokenListingsListed) {
+            const y = tokenListingsListed[idx];
             const price = y.value / divideConst;
-            if (price < floorPrice && price !== 0) {
-              floorPrice = price;
+            const earningSpeed = nftData[idx].speed;
+
+            if (price !== 0) {
+              if (earningSpeed > 1) {
+                if (price < floorPriceUpgraded) {
+                  floorPriceUpgraded = price;
+                  lowestUpgradedTokenId = y.tokenId;
+                }
+              } else {
+                if (price < floorPrice) {
+                  floorPrice = price;
+                }
+              }
             }
           }
 
@@ -89,6 +124,7 @@ const divideConst = 1e18;
 
       latestFloorPriceDateTime = new Date();
       latestFloorPrice = floorPrice;
+      latestFloorPriceUpgraded = floorPriceUpgraded;
     } catch (error) {
       // should not have error unless numTokenListings has error
       // any getTokenListings errors should be caught within inner try/catch
@@ -133,6 +169,15 @@ export const getPrice = async (footer?: any): Promise<string> => {
       floorResponse = `NFT floor price: **${latestFloorPrice.toFixed(
         0
       )}** ONE \\($${(priceOne * latestFloorPrice).toFixed(0)}\\)`;
+
+      if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
+        floorResponse += `
+Upgraded NFT floor price: **${latestFloorPriceUpgraded.toFixed(
+          0
+        )}** ONE \\(id ${lowestUpgradedTokenId}, $${(
+          priceOne * latestFloorPriceUpgraded
+        ).toFixed(0)}\\)`;
+      }
     } else {
       floorResponse = 'Error fetching NFT floor price';
     }
