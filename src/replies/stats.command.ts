@@ -1,5 +1,5 @@
 import Web3 from 'web3';
-import { CLNY as CLNYAddress } from '../values';
+import { CLNY as CLNYAddress, CLNY_LIQUIDITY, CLNY_TREASURY } from '../values';
 import CLNY from '../resources/CLNY.json';
 // import MC from './MC.json';
 import { AbiItem } from 'web3-utils';
@@ -13,18 +13,27 @@ const clny = new web3.eth.Contract(CLNY.abi as AbiItem[], CLNYAddress);
 // TODO caching
 // let lastMcSupply: number = 0;
 
+const factor = 1e-18;
+
 export const getStats = async (footer?: any): Promise<string> => {
   try {
-    const [_supply] = await Promise.all([
-      clny.methods.totalSupply().call(),
-      // mc.methods.totalSupply().call(),
-    ]);
-    const supply = (_supply * 10 ** -18).toFixed(3);
-    // lastMcSupply = Math.max(lastMcSupply, _MCSupply); // sometimes we get old data
+    const clnyTotalSupply = (await clny.methods.totalSupply().call()) * factor;
+
+    const clnyTreasury =
+      (await clny.methods.balanceOf(CLNY_TREASURY).call()) * factor;
+
+    const clnyLiquidity =
+      (await clny.methods.balanceOf(CLNY_LIQUIDITY).call()) * factor;
+
+    const circulatingClny = clnyTotalSupply - clnyTreasury - clnyLiquidity;
 
     return (
       `
-Current supply of CLNY: **${escapeDot(supply)}**
+Current supply of CLNY: **${escapeDot(clnyTotalSupply.toFixed(3))}**
+Circulating CLNY supply: **${escapeDot(circulatingClny.toFixed(3))}**
+CLNY Treasury: **${escapeDot(clnyTreasury.toFixed(3))}**
+CLNY Liquidity: **${escapeDot(clnyLiquidity.toFixed(3))}**
+
 **100K** CLNY were minted for initial liquidity
     ` +
       (footer
