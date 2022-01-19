@@ -163,7 +163,11 @@ export const getPrice = async (footer?: any): Promise<string> => {
     const costBuyFloorAndUpgrade = latestFloorPrice + 30 * priceClny;
     let cheaperStatement = '';
     if (costBuyUpgraded < costBuyFloorAndUpgrade) {
-      cheaperStatement = `It is currently cheaper to buy an upgraded plot \\(${costBuyUpgraded} ONE\\) than to buy the cheapest plot and upgrade \\(${costBuyFloorAndUpgrade} ONE\\)`;
+      cheaperStatement = `It is currently cheaper to buy an upgraded plot \\(**${escapeDot(
+        costBuyUpgraded.toFixed(3)
+      )}** ONE\\) than to buy the cheapest plot and upgrade \\(**${escapeDot(
+        costBuyFloorAndUpgrade.toFixed(3)
+      )}** ONE\\)`;
     } else if (costBuyUpgraded > costBuyFloorAndUpgrade) {
       cheaperStatement = `It is currently cheaper to buy the cheapest plot and upgrade \\(**${escapeDot(
         costBuyFloorAndUpgrade.toFixed(3)
@@ -194,8 +198,7 @@ Upgraded NFT floor price: **${latestFloorPriceUpgraded.toFixed(
         if (cheaperStatement !== '') {
           floorResponse += `
           
-${cheaperStatement}
-          `;
+${cheaperStatement}`;
         }
       }
     } else {
