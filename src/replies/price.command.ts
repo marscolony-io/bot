@@ -206,19 +206,20 @@ export const getPrice = async (footer?: any): Promise<string> => {
       new Date().getTime() - latestFloorPriceDateTime.getTime() <
         1000 * 60 * latestCachedDataToShowInMinutes
     ) {
-      floorResponse = `NFT floor price: **${latestFloorPrice.toFixed(
+      floorResponse = `Plot NFT floor price: **${latestFloorPrice.toFixed(
         0
-      )}** ONE \\($${(priceONEperUSD * latestFloorPrice).toFixed(
-        0
-      )}\\), ${numUnupgradedPlots + numUpgradedPlots} total plots available`;
+      )}** ONE \\($${(priceONEperUSD * latestFloorPrice).toFixed(0)}\\)`;
 
       if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
         floorResponse += `
-Upgraded NFT floor price: **${latestFloorPriceUpgraded.toFixed(
+Upgraded Plot NFT floor price: **${latestFloorPriceUpgraded.toFixed(
           0
         )}** ONE \\(id ${lowestUpgradedTokenId}, $${(
           priceONEperUSD * latestFloorPriceUpgraded
-        ).toFixed(0)}\\), ${numUpgradedPlots} upgraded plots available`;
+        ).toFixed(0)}\\)
+**${
+          numUnupgradedPlots + numUpgradedPlots
+        }** total plots available, **${numUpgradedPlots}** of them upgraded`;
 
         if (cheaperStatement !== '') {
           floorResponse += `
