@@ -210,7 +210,7 @@ export const getPrice = async (footer?: any): Promise<string> => {
         0
       )}** ONE \\($${(priceONEperUSD * latestFloorPrice).toFixed(
         0
-      )}\\), ${numUnupgradedPlots} plots available`;
+      )}\\), ${numUnupgradedPlots + numUpgradedPlots} plots available`;
 
       if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
         floorResponse += `
