@@ -3,7 +3,6 @@ import { Intents, Interaction, Message } from 'discord.js';
 import { Client } from 'discordx';
 import { dirname, importx } from '@discordx/importer';
 import { DISCORD_BOT_TOKEN } from './secrets';
-import { discordPriceBotsInit } from './discord/priceBots';
 
 export const discordClient = new Client({
   intents: [
@@ -34,6 +33,10 @@ discordClient.once('ready', async () => {
     guild: { log: true },
     global: { log: true },
   });
+
+  discordClient.guilds.cache.map((g) =>
+    g.me?.setNickname('MarsColonyPriceBot')
+  );
 
   // discordClient.guilds.cache.forEach((guild, guildId) => {
   //   if (guild) {
@@ -71,5 +74,4 @@ export async function discordBotInit() {
   );
 
   await discordClient.login(DISCORD_BOT_TOKEN);
-  await discordPriceBotsInit();
 }
