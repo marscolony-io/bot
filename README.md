@@ -22,4 +22,4 @@ export const DISCORD_BOT_TOKEN = yyy;
 
 ### Running the Application
 
-`yarn build` then `yarn start
+`yarn build` then `yarn start`
