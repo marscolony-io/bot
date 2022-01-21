@@ -57,9 +57,18 @@ interface AttributeData {
 
 // global variables for caching
 let latestFloorPrice = 0;
+let numUnupgradedPlots = 0;
 let latestFloorPriceUpgraded = 0;
+let numUpgradedPlots = 0;
+export let costBuyUpgradedInONE = 0;
+export let costBuyFloorAndUpgradeInONE = 0;
+
 let lowestUpgradedTokenId = 0;
+
 let latestFloorPriceDateTime = new Date();
+export let priceCLNYperONE = 0;
+export let priceONEperUSD = 0;
+export let priceCLNYperUSD = 0;
 
 const numMinutesCache = 1;
 const batchSize = 20;
@@ -77,6 +86,9 @@ const divideConst = 1e18;
       let floorPrice = Number.MAX_VALUE;
       let floorPriceUpgraded = Number.MAX_VALUE;
       let startingIdx = 1 + currBatchCount * batchSize;
+
+      let numUpgradedPlotsTemp = 0;
+      let numUnupgradedPlotsTemp = 0;
 
       while (startingIdx <= numListings) {
         try {
@@ -101,11 +113,13 @@ const divideConst = 1e18;
 
             if (price !== 0) {
               if (earningSpeed > 1) {
+                numUpgradedPlotsTemp++;
                 if (price < floorPriceUpgraded) {
                   floorPriceUpgraded = price;
                   lowestUpgradedTokenId = y.tokenId;
                 }
               } else {
+                numUnupgradedPlotsTemp++;
                 if (price < floorPrice) {
                   floorPrice = price;
                 }
@@ -125,10 +139,33 @@ const divideConst = 1e18;
       latestFloorPriceDateTime = new Date();
       latestFloorPrice = floorPrice;
       latestFloorPriceUpgraded = floorPriceUpgraded;
+
+      numUpgradedPlots = numUpgradedPlotsTemp;
+      numUnupgradedPlots = numUnupgradedPlotsTemp;
+
+      costBuyUpgradedInONE = latestFloorPriceUpgraded;
+      costBuyFloorAndUpgradeInONE = latestFloorPrice + 30 * priceCLNYperONE;
     } catch (error) {
       // should not have error unless numTokenListings has error
       // any getTokenListings errors should be caught within inner try/catch
-      console.log(error);
+      console.log('nft pricing error', error);
+    }
+
+    try {
+      const clnyInLiquidity =
+        (await CLNYTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
+      const oneInLiquidity =
+        (await WoneTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
+      const usdcInUsdcLiquidity =
+        (await UsdcTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-6;
+      const oneInUsdcLiquidity =
+        (await WoneTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-18;
+
+      priceCLNYperONE = oneInLiquidity / clnyInLiquidity;
+      priceONEperUSD = usdcInUsdcLiquidity / oneInUsdcLiquidity;
+      priceCLNYperUSD = priceCLNYperONE * priceONEperUSD;
+    } catch (error) {
+      console.log('pricing error', error);
     }
 
     await new Promise((resolve) =>
@@ -137,42 +174,28 @@ const divideConst = 1e18;
   }
 })();
 
+// get cached values
 export const getPrice = async (footer?: any): Promise<string> => {
   try {
-    const clnyInLiquidity =
-      (await CLNYTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
-    const oneInLiquidity =
-      (await WoneTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
-    const usdcInUsdcLiquidity =
-      (await UsdcTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-6;
-    const oneInUsdcLiquidity =
-      (await WoneTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-18;
-
-    const priceClny = oneInLiquidity / clnyInLiquidity;
-    const priceOne = usdcInUsdcLiquidity / oneInUsdcLiquidity;
-    const priceDollars = priceClny * priceOne;
-
     const priceResponse = `
-1 CLNY \\= **${escapeDot(priceClny.toFixed(3))}** ONE
-1 ONE \\= **$${escapeDot(priceOne.toFixed(3))}** \\(WONE\\-1USDC pair\\)
-1 CLNY \\= **$${escapeDot(priceDollars.toFixed(3))}**
+1 CLNY \\= **${escapeDot(priceCLNYperONE.toFixed(3))}** ONE
+1 ONE \\= **$${escapeDot(priceONEperUSD.toFixed(3))}** \\(WONE\\-1USDC pair\\)
+1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}**
 [Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)
     `.trim();
 
-    const costBuyUpgraded = latestFloorPriceUpgraded;
-    const costBuyFloorAndUpgrade = latestFloorPrice + 30 * priceClny;
     let cheaperStatement = '';
-    if (costBuyUpgraded < costBuyFloorAndUpgrade) {
+    if (costBuyUpgradedInONE < costBuyFloorAndUpgradeInONE) {
       cheaperStatement = `It is currently cheaper to buy an upgraded plot \\(**${escapeDot(
-        costBuyUpgraded.toFixed(3)
+        costBuyUpgradedInONE.toFixed(3)
       )}** ONE\\) than to buy the cheapest plot and upgrade \\(**${escapeDot(
-        costBuyFloorAndUpgrade.toFixed(3)
+        costBuyFloorAndUpgradeInONE.toFixed(3)
       )}** ONE\\)`;
-    } else if (costBuyUpgraded > costBuyFloorAndUpgrade) {
+    } else if (costBuyUpgradedInONE > costBuyFloorAndUpgradeInONE) {
       cheaperStatement = `It is currently cheaper to buy the cheapest plot and upgrade \\(**${escapeDot(
-        costBuyFloorAndUpgrade.toFixed(3)
+        costBuyFloorAndUpgradeInONE.toFixed(3)
       )}** ONE\\) than to buy an upgraded plot \\(**${escapeDot(
-        costBuyUpgraded.toFixed(3)
+        costBuyUpgradedInONE.toFixed(3)
       )}** ONE\\)`;
     }
 
@@ -185,15 +208,17 @@ export const getPrice = async (footer?: any): Promise<string> => {
     ) {
       floorResponse = `NFT floor price: **${latestFloorPrice.toFixed(
         0
-      )}** ONE \\($${(priceOne * latestFloorPrice).toFixed(0)}\\)`;
+      )}** ONE \\($${(priceONEperUSD * latestFloorPrice).toFixed(
+        0
+      )}\\), ${numUnupgradedPlots} plots available`;
 
       if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
         floorResponse += `
 Upgraded NFT floor price: **${latestFloorPriceUpgraded.toFixed(
           0
         )}** ONE \\(id ${lowestUpgradedTokenId}, $${(
-          priceOne * latestFloorPriceUpgraded
-        ).toFixed(0)}\\)`;
+          priceONEperUSD * latestFloorPriceUpgraded
+        ).toFixed(0)}\\), ${numUpgradedPlots} upgraded plots available`;
 
         if (cheaperStatement !== '') {
           floorResponse += `

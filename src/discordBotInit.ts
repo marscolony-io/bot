@@ -3,6 +3,7 @@ import { Intents, Interaction, Message } from 'discord.js';
 import { Client } from 'discordx';
 import { dirname, importx } from '@discordx/importer';
 import { DISCORD_BOT_TOKEN } from './secrets';
+import { discordPriceBotsInit } from './discord/priceBots';
 
 export const discordClient = new Client({
   intents: [
@@ -34,6 +35,19 @@ discordClient.once('ready', async () => {
     global: { log: true },
   });
 
+  // discordClient.guilds.cache.forEach((guild, guildId) => {
+  //   if (guild) {
+  //     guild.channels.create('Text', {
+  //       permissionOverwrites: [
+  //         {
+  //           id: guildId,
+  //           allow: ['VIEW_CHANNEL'],
+  //         },
+  //       ],
+  //     });
+  //   }
+  // });
+
   // init permissions; enabled log to see changes
   await discordClient.initApplicationPermissions(true);
 
@@ -57,4 +71,5 @@ export async function discordBotInit() {
   );
 
   await discordClient.login(DISCORD_BOT_TOKEN);
+  await discordPriceBotsInit();
 }
