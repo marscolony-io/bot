@@ -5,49 +5,34 @@ import { getPrice } from './replies/price.command';
 import { RESOURCES_TEXT } from './replies/resources.command';
 import { getStats } from './replies/stats.command';
 import { TELEGRAM_BOT_TOKEN } from './secrets';
+import { answerClosure } from './telegram/answerClosure';
 import { telegramFooter } from './telegram/telegramFooter';
 
 const bot = new Telegraf(TELEGRAM_BOT_TOKEN);
 
+const contractAnswer = answerClosure();
 bot.command(['contract', 'contracts'], (ctx: Context) => {
-  ctx.telegram.sendMessage(ctx.chat?.id ?? 0, CONTRACT_TEXT(telegramFooter), {
-    parse_mode: 'MarkdownV2',
-    disable_web_page_preview: true,
-  });
+  contractAnswer(ctx, CONTRACT_TEXT(telegramFooter));
 });
 
+const statsAnswer = answerClosure();
 bot.command(['stat', 'stats'], async (ctx: Context) => {
-  ctx.telegram.sendMessage(ctx.chat?.id ?? 0, await getStats(telegramFooter), {
-    parse_mode: 'MarkdownV2',
-    disable_web_page_preview: true,
-  });
+  statsAnswer(ctx, await getStats(telegramFooter));
 });
 
+const priceAnswer = answerClosure();
 bot.command(
   ['price', 'chart', 'nft', 'floor', 'floorprice'],
   async (ctx: Context) => {
-    ctx.telegram.sendMessage(
-      ctx.chat?.id ?? 0,
-      await getPrice(telegramFooter),
-      {
-        parse_mode: 'MarkdownV2',
-        disable_web_page_preview: true,
-      }
-    );
+    priceAnswer(ctx, await getPrice(telegramFooter));
   }
 );
 
+const wpAnswer = answerClosure();
 bot.command(
   ['website', 'wp', 'whitepaper', 'roadmap', 'tokenomics', 'progress'],
   (ctx: Context) => {
-    ctx.telegram.sendMessage(
-      ctx.chat?.id ?? 0,
-      RESOURCES_TEXT(telegramFooter),
-      {
-        parse_mode: 'MarkdownV2',
-        disable_web_page_preview: true,
-      }
-    );
+    wpAnswer(ctx, RESOURCES_TEXT(telegramFooter));
   }
 );
 
