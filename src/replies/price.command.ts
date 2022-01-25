@@ -208,7 +208,7 @@ export const getPrice = async (footer?: any): Promise<string> => {
     ) {
       floorResponse = `Plot NFT floor price: **${latestFloorPrice.toFixed(
         0
-      )}** ONE \\($${escapeDot((priceONEperUSD * latestFloorPrice).toFixed(0)}, ${(
+      )}** ONE \\($${(priceONEperUSD * latestFloorPrice).toFixed(0)}, ${escapeDot((
         latestFloorPrice / priceCLNYperONE
       ).toFixed(3))} CLNY\\)`;
 
