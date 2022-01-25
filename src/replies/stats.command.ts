@@ -33,8 +33,6 @@ Current supply of CLNY: **${escapeDot(clnyTotalSupply.toFixed(3))}**
 Circulating CLNY supply: **${escapeDot(circulatingClny.toFixed(3))}**
 CLNY Treasury: **${escapeDot(clnyTreasury.toFixed(3))}**
 CLNY Liquidity: **${escapeDot(clnyLiquidity.toFixed(3))}**
-
-**100K** CLNY were minted for initial liquidity
     ` +
       (footer
         ? `
