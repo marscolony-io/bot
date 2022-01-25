@@ -34,9 +34,9 @@ discordClient.once('ready', async () => {
     global: { log: true },
   });
 
-  discordClient.guilds.cache.map((g) =>
-    g.me?.setNickname('MarsColonyPriceBot')
-  );
+  // discordClient.guilds.cache.map((g) =>
+  //   g.me?.setNickname('MarsColonyPriceBot')
+  // );
 
   // discordClient.guilds.cache.forEach((guild, guildId) => {
   //   if (guild) {
