@@ -208,9 +208,9 @@ export const getPrice = async (footer?: any): Promise<string> => {
     ) {
       floorResponse = `Plot NFT floor price: **${latestFloorPrice.toFixed(
         0
-      )}** ONE \\($${(priceONEperUSD * latestFloorPrice).toFixed(0)}, ${(
+      )}** ONE \\($${escapeDot((priceONEperUSD * latestFloorPrice).toFixed(0)}, ${(
         latestFloorPrice / priceCLNYperONE
-      ).toFixed(3)} CLNY\\)`;
+      ).toFixed(3))} CLNY\\)`;
 
       if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
         floorResponse += `
@@ -218,9 +218,9 @@ Upgraded Plot NFT floor price: **${latestFloorPriceUpgraded.toFixed(
           0
         )}** ONE \\(id ${lowestUpgradedTokenId}, $${(
           priceONEperUSD * latestFloorPriceUpgraded
-        ).toFixed(0)}, ${(latestFloorPriceUpgraded / priceCLNYperONE).toFixed(
+        ).toFixed(0)}, ${escapeDot((latestFloorPriceUpgraded / priceCLNYperONE).toFixed(
           3
-        )} CLNY\\)
+        ))} CLNY\\)
 **${
           numUnupgradedPlots + numUpgradedPlots
         }** total plots available, **${numUpgradedPlots}** of them upgraded`;
