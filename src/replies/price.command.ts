@@ -1,4 +1,3 @@
-// import axios from 'axios';
 import Web3 from 'web3';
 import {
   CLNY,
@@ -10,7 +9,6 @@ import {
   USDC_PAIR,
   GM,
 } from '../values';
-import { EventData } from 'web3-eth-contract';
 import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
 import ClnyArtefact from '../resources/CLNY.json';
 import GameManager from '../resources/GameManager.json';
@@ -75,7 +73,7 @@ let currBlockNumCached = 0;
 let totalTransactionValueCached = 0;
 let numSoldCached = 0;
 
-const numMinutesCache = 1;
+export const numMinutesCache = 1;
 const batchSize = 20;
 const divideConst = 1e18;
 
@@ -258,7 +256,10 @@ interface TokenBoughtListing {
 })();
 // get cached values
 
-export const getPrice = async (footer?: any): Promise<string> => {
+export const getPrice = async (
+  footer?: any,
+  includeDexscreener?: boolean
+): Promise<string> => {
   try {
     const priceResponse = `
 1 CLNY \\= **${escapeDot(priceCLNYperONE.toFixed(3))}** ONE
@@ -288,7 +289,7 @@ export const getPrice = async (footer?: any): Promise<string> => {
       new Date().getTime() - latestFloorPriceDateTime.getTime() <
         1000 * 60 * latestCachedDataToShowInMinutes
     ) {
-      floorResponse = `Plot NFT floor price: **${latestFloorPrice.toFixed(
+      floorResponse = `Plot floor price: **${latestFloorPrice.toFixed(
         0
       )}** ONE ($${(priceONEperUSD * latestFloorPrice).toFixed(0)}, ${escapeDot(
         (latestFloorPrice / priceCLNYperONE).toFixed(3)
@@ -296,7 +297,7 @@ export const getPrice = async (footer?: any): Promise<string> => {
 
       if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
         floorResponse += `
-Upgraded Plot NFT floor price: **${latestFloorPriceUpgraded.toFixed(
+Upgraded Plot floor price: **${latestFloorPriceUpgraded.toFixed(
           0
         )}** ONE (id ${lowestUpgradedTokenId}, $${(
           priceONEperUSD * latestFloorPriceUpgraded
@@ -309,7 +310,7 @@ Upgraded Plot NFT floor price: **${latestFloorPriceUpgraded.toFixed(
 
         if (cheaperStatement !== '') {
           floorResponse += `
-          
+
 ${cheaperStatement}`;
         }
       }
@@ -344,11 +345,15 @@ ${footer}
           : '')
     ).trim();
 
-    return (
-      `[Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)` +
-      '\n' +
-      response
-    );
+    if (includeDexscreener) {
+      return (
+        `[Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)` +
+        '\n' +
+        response
+      );
+    } else {
+      return response;
+    }
   } catch {
     return 'Error\n\n' + footer;
   }

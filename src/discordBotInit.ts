@@ -2,9 +2,10 @@ import 'reflect-metadata';
 import { Intents, Interaction, Message } from 'discord.js';
 import { Client } from 'discordx';
 import { dirname, importx } from '@discordx/importer';
-import { DISCORD_BOT_TOKEN } from './secrets';
+import { DISCORD_BOT_TOKEN, DISCORD_REALTIME_CHANNEL_ID } from './secrets';
+import { updateRealtimeChannelPriceData } from './discord/webhookdata';
 
-export const discordClient = new Client({
+const discordClient = new Client({
   intents: [
     Intents.FLAGS.GUILDS,
     Intents.FLAGS.GUILD_MEMBERS,
@@ -34,22 +35,9 @@ discordClient.once('ready', async () => {
     global: { log: true },
   });
 
-  // discordClient.guilds.cache.map((g) =>
-  //   g.me?.setNickname('MarsColonyPriceBot')
-  // );
+  await discordClient.channels.fetch(DISCORD_REALTIME_CHANNEL_ID);
 
-  // discordClient.guilds.cache.forEach((guild, guildId) => {
-  //   if (guild) {
-  //     guild.channels.create('Text', {
-  //       permissionOverwrites: [
-  //         {
-  //           id: guildId,
-  //           allow: ['VIEW_CHANNEL'],
-  //         },
-  //       ],
-  //     });
-  //   }
-  // });
+  await updateRealtimeChannelPriceData(discordClient);
 
   // init permissions; enabled log to see changes
   await discordClient.initApplicationPermissions(true);
