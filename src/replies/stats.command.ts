@@ -12,20 +12,24 @@ const clny = new web3.eth.Contract(CLNY.abi as AbiItem[], CLNYAddress);
 
 // TODO caching
 // let lastMcSupply: number = 0;
+export let clnyTotalSupply = 0;
+export let clnyTreasury = 0;
+export let clnyLiquidity = 0;
+export let circulatingClny = 0;
 
 const factor = 1e-18;
 
-export const getStats = async (footer?: any): Promise<string> => {
+export const getCLNYStats = async (footer?: any): Promise<string> => {
   try {
-    const clnyTotalSupply = (await clny.methods.totalSupply().call()) * factor;
+    clnyTotalSupply = (await clny.methods.totalSupply().call()) * factor;
 
-    const clnyTreasury =
+    clnyTreasury =
       (await clny.methods.balanceOf(CLNY_TREASURY).call()) * factor;
 
-    const clnyLiquidity =
+    clnyLiquidity =
       (await clny.methods.balanceOf(CLNY_LIQUIDITY).call()) * factor;
 
-    const circulatingClny = clnyTotalSupply - clnyTreasury - clnyLiquidity;
+    circulatingClny = clnyTotalSupply - clnyTreasury - clnyLiquidity;
 
     return (
       `
@@ -42,6 +46,6 @@ ${footer}
     ).trim();
   } catch (error) {
     console.log(error);
-    return 'Error\n\n' + footer;
+    return 'Loading CLNY statistics...\n\n' + footer;
   }
 };
