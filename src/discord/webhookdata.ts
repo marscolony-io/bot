@@ -12,13 +12,7 @@ import {
   priceONEperUSD,
   totalTransactionValueCached,
 } from '../replies/price.command';
-import {
-  circulatingClny,
-  clnyLiquidity,
-  clnyTotalSupply,
-  clnyTreasury,
-  getCLNYStats,
-} from '../replies/stats.command';
+import { getCLNYStats } from '../replies/stats.command';
 import {
   DISCORD_REALTIME_CHANNEL_ID,
   DISCORD_REALTIME_CHANNEL_WEBHOOK_ID,
@@ -170,14 +164,7 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
       })
       .setColor(sectionsData[3].colour),
     new MessageEmbed()
-      .setDescription(
-        clnyTotalSupply === 0 ||
-          clnyTreasury === 0 ||
-          clnyLiquidity === 0 ||
-          circulatingClny === 0
-          ? 'Fetching CLNY statistics...'
-          : statsData
-      )
+      .setDescription(statsData)
       .setAuthor({
         name: sectionsData[4].authorName,
         iconURL: sectionsData[4].authorIconUrl,
