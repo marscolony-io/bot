@@ -2,7 +2,7 @@ import Web3 from 'web3';
 import {
   CLNY as CLNYAddress,
   CLNY_LIQUIDITY,
-  CLNY_LIQUIDITY_SMART_CONTRACT,
+  CLNY_LIQUIDITY_BUFFER,
   CLNY_TREASURY,
 } from '../values';
 import CLNY from '../resources/CLNY.json';
@@ -22,18 +22,17 @@ export const getCLNYStats = async (footer?: any): Promise<string> => {
     const clnyTreasury =
       (await clny.methods.balanceOf(CLNY_TREASURY).call()) * factor;
 
-    const clnyLiquidity =
+    let clnyLiquidity =
       (await clny.methods.balanceOf(CLNY_LIQUIDITY).call()) * factor;
 
-    const clnyLiquiditySmartContract =
-      (await clny.methods.balanceOf(CLNY_LIQUIDITY_SMART_CONTRACT).call()) *
+    clnyLiquidity +=
+      (await clny.methods.balanceOf(CLNY_LIQUIDITY_BUFFER).call()) *
       factor;
 
     const circulatingClny =
       clnyTotalSupply -
       clnyTreasury -
-      clnyLiquidity -
-      clnyLiquiditySmartContract;
+      clnyLiquidity;
 
     return (
       `
@@ -43,8 +42,6 @@ Current total supply of CLNY: **${numberWithCommas(
 Circulating CLNY: **${numberWithCommas(escapeDot(circulatingClny.toFixed(3)))}**
 CLNY Treasury: **${numberWithCommas(escapeDot(clnyTreasury.toFixed(3)))}**
 CLNY Liquidity: **${numberWithCommas(escapeDot(clnyLiquidity.toFixed(3)))}**
-CLNY Liquidity Mining: **${numberWithCommas(
-        escapeDot(clnyLiquiditySmartContract.toFixed(3))
       )}**
     ` +
       (footer
