@@ -1,4 +1,3 @@
-// import axios from 'axios';
 import Web3 from 'web3';
 import {
   CLNY,
@@ -10,7 +9,6 @@ import {
   USDC_PAIR,
   GM,
 } from '../values';
-import { EventData } from 'web3-eth-contract';
 import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
 import ClnyArtefact from '../resources/CLNY.json';
 import GameManager from '../resources/GameManager.json';
@@ -57,10 +55,10 @@ interface AttributeData {
 }
 
 // global variables for caching
-let latestFloorPrice = 0;
-let numUnupgradedPlots = 0;
-let latestFloorPriceUpgraded = 0;
-let numUpgradedPlots = 0;
+export let latestFloorPrice = 0;
+export let numUnupgradedPlots = 0;
+export let latestFloorPriceUpgraded = 0;
+export let numUpgradedPlots = 0;
 export let costBuyUpgradedInONE = 0;
 export let costBuyFloorAndUpgradeInONE = 0;
 
@@ -72,12 +70,20 @@ export let priceONEperUSD = 0;
 export let priceCLNYperUSD = 0;
 
 let currBlockNumCached = 0;
-let totalTransactionValueCached = 0;
-let numSoldCached = 0;
+export let totalTransactionValueCached = 0;
+export let numSoldCached = 0;
 
-const numMinutesCache = 1;
+export const numMinutesCache = 1;
 const batchSize = 20;
 const divideConst = 1e18;
+const listingsBatchSize = 1024;
+
+interface TokenBoughtListing {
+  tokenId: string;
+  value: string;
+  seller: string;
+  expireTimestamp: number;
+}
 
 // cache every numMinutesCache in background (not upon query)
 (async () => {
@@ -173,92 +179,73 @@ const divideConst = 1e18;
       console.log('pricing error', error);
     }
 
+    // getting total sales
+    const latestBlockNum = await web3.eth.getBlockNumber();
+
+    // let currBlockNum = 20758264; // https://nftkey.app/marketplace-contracts/ -> Harmony Blockchain -> Transaction Hash -> Block Number
+    // let currBlockNum = 21413624; // through testing of very first transaction
+
+    // testing (for caching purposes)
+    let currBlockNum = 22170360;
+    let totalTransactionValue = 16946838.806685008;
+    let numSold = 6581;
+
+    while (currBlockNum < latestBlockNum) {
+      const toBlock = Math.min(
+        currBlockNum + listingsBatchSize - 1,
+        latestBlockNum
+      );
+
+      const events = await nftkeysMarketplaceContract.getPastEvents(
+        'TokenBought',
+        {
+          fromBlock: currBlockNum,
+          toBlock: toBlock,
+          address: NFTKeysMarketplaceAddress,
+          filter: {
+            erc721Address: MarsColonyNFT,
+          },
+        }
+      );
+
+      if (events && events.length > 0) {
+        const tokensBoughtData = events.map(
+          (e) => e.returnValues.listing as TokenBoughtListing
+        );
+        const tokensPricesBought = tokensBoughtData.map((t) => {
+          const tokenId = Number(t.tokenId);
+          if (tokenId > 21000 || tokenId < 1) {
+            console.log('ERROR:', t.tokenId, Number(t.value) / divideConst);
+            return 0;
+          }
+          return Number(t.value) / divideConst;
+        });
+
+        for (const t of tokensPricesBought) {
+          if (t > 0) {
+            numSold++;
+            totalTransactionValue += t;
+          }
+        }
+      }
+
+      currBlockNum = toBlock + 1;
+    }
+
+    currBlockNumCached = currBlockNum;
+    totalTransactionValueCached = totalTransactionValue;
+    numSoldCached = numSold;
+
     await new Promise((resolve) =>
       setTimeout(resolve, 1000 * 60 * numMinutesCache)
     );
   }
 })();
 
-interface TokenBoughtListing {
-  tokenId: string;
-  value: string;
-  seller: string;
-  expireTimestamp: number;
-}
-
-// getting total sales
-(async () => {
-  while (true) {
-    try {
-      const latestBlockNum = await web3.eth.getBlockNumber();
-
-      // let currBlockNum = 20758264; // https://nftkey.app/marketplace-contracts/ -> Harmony Blockchain -> Transaction Hash -> Block Number
-      // let currBlockNum = 21413624; // through testing of very first transaction
-      // let totalTransactionValue = 0;
-      // let numSold = 0;
-
-      // testing (for caching purposes)
-      let currBlockNum = 22170360;
-      let totalTransactionValue = 16946838.806685008;
-      let numSold = 6581;
-
-      const batchSize = 1024;
-
-      while (currBlockNum < latestBlockNum) {
-        const toBlock = Math.min(currBlockNum + batchSize - 1, latestBlockNum);
-
-        const events = await nftkeysMarketplaceContract.getPastEvents(
-          'TokenBought',
-          {
-            fromBlock: currBlockNum,
-            toBlock: toBlock,
-            address: NFTKeysMarketplaceAddress,
-            filter: {
-              erc721Address: MarsColonyNFT,
-            },
-          }
-        );
-
-        if (events && events.length > 0) {
-          const tokensBoughtData = events.map(
-            (e) => e.returnValues.listing as TokenBoughtListing
-          );
-          const tokensPricesBought = tokensBoughtData.map((t) => {
-            const tokenId = Number(t.tokenId);
-            if (tokenId > 21000 || tokenId < 1) {
-              console.log('ERROR:', t.tokenId, Number(t.value) / divideConst);
-              return 0;
-            }
-            return Number(t.value) / divideConst;
-          });
-
-          for (const t of tokensPricesBought) {
-            if (t > 0) {
-              numSold++;
-              totalTransactionValue += t;
-            }
-          }
-        }
-
-        currBlockNum = toBlock + 1;
-      }
-
-      currBlockNumCached = currBlockNum;
-      totalTransactionValueCached = totalTransactionValue;
-      numSoldCached = numSold;
-
-      await new Promise((resolve) =>
-        setTimeout(resolve, 1000 * 60 * numMinutesCache)
-      );
-    } catch (err) {
-      console.log('total transactions error');
-      console.log(err);
-    }
-  }
-})();
-// get cached values
-
-export const getPrice = async (footer?: any): Promise<string> => {
+export const getPrice = async (
+  footer?: any,
+  includeDexscreener?: boolean
+): Promise<string> => {
   try {
     const priceResponse = `
 1 CLNY \\= **${escapeDot(priceCLNYperONE.toFixed(3))}** ONE
@@ -288,7 +275,7 @@ export const getPrice = async (footer?: any): Promise<string> => {
       new Date().getTime() - latestFloorPriceDateTime.getTime() <
         1000 * 60 * latestCachedDataToShowInMinutes
     ) {
-      floorResponse = `Plot NFT floor price: **${latestFloorPrice.toFixed(
+      floorResponse = `Plot floor price: **${latestFloorPrice.toFixed(
         0
       )}** ONE ($${(priceONEperUSD * latestFloorPrice).toFixed(0)}, ${escapeDot(
         (latestFloorPrice / priceCLNYperONE).toFixed(3)
@@ -296,7 +283,7 @@ export const getPrice = async (footer?: any): Promise<string> => {
 
       if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
         floorResponse += `
-Upgraded Plot NFT floor price: **${latestFloorPriceUpgraded.toFixed(
+Upgraded Plot floor price: **${latestFloorPriceUpgraded.toFixed(
           0
         )}** ONE (id ${lowestUpgradedTokenId}, $${(
           priceONEperUSD * latestFloorPriceUpgraded
@@ -309,7 +296,7 @@ Upgraded Plot NFT floor price: **${latestFloorPriceUpgraded.toFixed(
 
         if (cheaperStatement !== '') {
           floorResponse += `
-          
+
 ${cheaperStatement}`;
         }
       }
@@ -344,11 +331,15 @@ ${footer}
           : '')
     ).trim();
 
-    return (
-      `[Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)` +
-      '\n' +
-      response
-    );
+    if (includeDexscreener) {
+      return (
+        `[Dexscreener](https:\\/\\/dexscreener\\.com\\/harmony\\/0xcd818813f038a4d1a27c84d24d74bbc21551fa83)` +
+        '\n' +
+        response
+      );
+    } else {
+      return response;
+    }
   } catch {
     return 'Error\n\n' + footer;
   }

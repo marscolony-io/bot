@@ -3,7 +3,7 @@ import { discordBotInit } from './discordBotInit';
 import { CONTRACT_TEXT } from './replies/contract.command';
 import { getPrice } from './replies/price.command';
 import { RESOURCES_TEXT } from './replies/resources.command';
-import { getStats } from './replies/stats.command';
+import { getCLNYStats } from './replies/stats.command';
 import { TELEGRAM_BOT_TOKEN } from './secrets';
 import { answerClosure } from './telegram/answerClosure';
 import { telegramFooter } from './telegram/telegramFooter';
@@ -17,7 +17,7 @@ bot.command(['contract', 'contracts'], (ctx: Context) => {
 
 const statsAnswer = answerClosure();
 bot.command(['stat', 'stats'], async (ctx: Context) => {
-  statsAnswer(ctx, await getStats(telegramFooter));
+  statsAnswer(ctx, await getCLNYStats(telegramFooter));
 });
 
 const priceAnswer = answerClosure();
