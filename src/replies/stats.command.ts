@@ -42,7 +42,6 @@ Current total supply of CLNY: **${numberWithCommas(
 Circulating CLNY: **${numberWithCommas(escapeDot(circulatingClny.toFixed(3)))}**
 CLNY Treasury: **${numberWithCommas(escapeDot(clnyTreasury.toFixed(3)))}**
 CLNY Liquidity: **${numberWithCommas(escapeDot(clnyLiquidity.toFixed(3)))}**
-      )}**
     ` +
       (footer
         ? `
