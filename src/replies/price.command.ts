@@ -78,6 +78,13 @@ const batchSize = 20;
 const divideConst = 1e18;
 const listingsBatchSize = 1024;
 
+interface PlotEarning {
+  count: number;
+  earningSpeed: number;
+}
+
+export let earningSpeedsArr: PlotEarning[] = [];
+
 interface TokenBoughtListing {
   tokenId: string;
   value: string;
@@ -101,6 +108,8 @@ interface TokenBoughtListing {
       let numUpgradedPlotsTemp = 0;
       let numUnupgradedPlotsTemp = 0;
 
+      const earningSpeedsArrTemp: PlotEarning[] = [];
+
       while (startingIdx <= numListings) {
         try {
           const tokenListings: Listing[] =
@@ -123,6 +132,21 @@ interface TokenBoughtListing {
             const earningSpeed = nftData[idx].speed;
 
             if (price !== 0) {
+              const idx = earningSpeedsArrTemp.findIndex(
+                (e) => e.earningSpeed === earningSpeed
+              );
+              if (idx > -1) {
+                earningSpeedsArrTemp[idx] = {
+                  ...earningSpeedsArrTemp[idx],
+                  count: earningSpeedsArrTemp[idx].count + 1,
+                };
+              } else {
+                earningSpeedsArrTemp.push({
+                  earningSpeed: earningSpeed,
+                  count: 1,
+                });
+              }
+
               if (earningSpeed > 1) {
                 numUpgradedPlotsTemp++;
                 if (price < floorPriceUpgraded) {
@@ -156,6 +180,8 @@ interface TokenBoughtListing {
 
       costBuyUpgradedInONE = latestFloorPriceUpgraded;
       costBuyFloorAndUpgradeInONE = latestFloorPrice + 30 * priceCLNYperONE;
+
+      earningSpeedsArr = earningSpeedsArrTemp;
     } catch (error) {
       // should not have error unless numTokenListings has error
       // any getTokenListings errors should be caught within inner try/catch
@@ -185,7 +211,8 @@ interface TokenBoughtListing {
     // let currBlockNum = 20758264; // https://nftkey.app/marketplace-contracts/ -> Harmony Blockchain -> Transaction Hash -> Block Number
     // let currBlockNum = 21413624; // through testing of very first transaction
 
-    // testing (for caching purposes)
+    // for caching purposes
+    // TODO store this in db / json file
     let currBlockNum = 22170360;
     let totalTransactionValue = 16946838.806685008;
     let numSold = 6581;
@@ -268,7 +295,7 @@ export const getPrice = async (
       )}** ONE)`;
     }
 
-    const latestCachedDataToShowInMinutes = 15;
+    const latestCachedDataToShowInMinutes = 5;
     let floorResponse = '';
     if (
       latestFloorPrice > 0 &&
@@ -317,11 +344,24 @@ Total Sold: **${numSoldCached}**
         `;
     }
 
+    let earningSpeedResponse = ``;
+    if (earningSpeedsArr.length > 0) {
+      earningSpeedResponse = earningSpeedsArr
+        .sort((a, b) => a.earningSpeed - b.earningSpeed)
+        .map(
+          (e) =>
+            `Earning Speed **${e.earningSpeed}** CLNY/day: **${e.count}** plots`
+        )
+        .join('\n');
+    }
+
     const response = escapeBrackets(
       `
 ${priceResponse}
 
 ${floorResponse}
+
+${earningSpeedResponse}
 
 ${totalTransactionsResponse}` +
         (footer
