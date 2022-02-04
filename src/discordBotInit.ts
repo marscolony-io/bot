@@ -68,9 +68,9 @@ discordClient.on('messageCreate', (message: Message) => {
           DISCORD_REALTIME_CHANNEL_WEBHOOK_ID,
           DISCORD_REALTIME_CHANNEL_WEBHOOK_TOKEN
         );
-        const msges = await message.channel.messages.fetch();
 
-        // delete all except one
+        // in realtime webhook (should have just 1 updated message), delete all except current message
+        const msges = await message.channel.messages.fetch();
         for (const msgEntry of msges.entries()) {
           const [msgId, msg] = msgEntry;
           if (msgId !== messageId) {
