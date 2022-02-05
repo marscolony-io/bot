@@ -1,4 +1,5 @@
 import { Client, ColorResolvable, MessageEmbed } from 'discord.js';
+import { getLiquidityMiningStats } from '../replies/liquiditymining.command';
 import {
   earningSpeedsArr,
   getPrice,
@@ -11,6 +12,7 @@ import {
   priceCLNYperONE,
   priceCLNYperUSD,
   priceONEperUSD,
+  priceSLPperUSD,
   totalTransactionValueCached,
 } from '../replies/price.command';
 import { getCLNYStats } from '../replies/stats.command';
@@ -65,6 +67,12 @@ const sectionsData: SectionData[] = [
     authorIconUrl:
       'https://aws1.discourse-cdn.com/standard17/uploads/marscolony/original/1X/73f77e8e1a03287b99217692129344d4441f8bf3.png',
     authorName: 'CLNY Statistics',
+  },
+  {
+    colour: '#000000',
+    authorIconUrl:
+      'https://assets-global.website-files.com/606f63778ec431ec1b930f1f/6078617f66171f30133f2d65_image-asset%20(4).png',
+    authorName: 'CLNY Liquidity Mining',
   },
 ];
 
@@ -121,12 +129,16 @@ export const updateRealtimeChannelPriceData = async (discordClient: Client) => {
 const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
   const priceData = await getPrice();
   const statsData = await getCLNYStats();
+  const liquidityMiningData = await getLiquidityMiningStats();
 
   const priceDataSections = priceData.split('\n\n');
   return [
     new MessageEmbed()
       .setDescription(
-        priceCLNYperONE === 0 || priceONEperUSD === 0 || priceCLNYperUSD === 0
+        priceCLNYperONE === 0 ||
+          priceONEperUSD === 0 ||
+          priceCLNYperUSD === 0 ||
+          priceSLPperUSD === 0
           ? 'Fetching prices...'
           : priceDataSections[0]
       )
@@ -189,5 +201,12 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
         iconURL: sectionsData[5].authorIconUrl,
       })
       .setColor(sectionsData[5].colour),
+    new MessageEmbed()
+      .setDescription(liquidityMiningData)
+      .setAuthor({
+        name: sectionsData[6].authorName,
+        iconURL: sectionsData[6].authorIconUrl,
+      })
+      .setColor(sectionsData[6].colour),
   ];
 };

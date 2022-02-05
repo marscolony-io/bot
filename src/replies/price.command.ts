@@ -3,12 +3,10 @@ import {
   CLNY,
   MarsColonyNFT,
   NFTKeysMarketplaceAddress,
-  WONE_CONTRACT,
-  CLNY_PAIR,
-  USDC_CONTRACT,
-  USDC_PAIR,
   GM,
+  CLNY_LiquidityMining,
 } from '../values';
+import LiquidityMining from '../resources/LiquidityMining.json';
 import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
 import ClnyArtefact from '../resources/CLNY.json';
 import GameManager from '../resources/GameManager.json';
@@ -26,14 +24,9 @@ const CLNYTokenContract = new web3.eth.Contract(
   CLNY
 );
 
-const WoneTokenContract = new web3.eth.Contract(
-  ClnyArtefact.abi as AbiItem[], // ERC20
-  WONE_CONTRACT
-);
-
-const UsdcTokenContract = new web3.eth.Contract(
-  ClnyArtefact.abi as AbiItem[], // ERC20
-  USDC_CONTRACT
+const clnyLiquidityMining = new web3.eth.Contract(
+  LiquidityMining.abi as AbiItem[],
+  CLNY_LiquidityMining
 );
 
 const gm = new web3.eth.Contract(GameManager.abi as AbiItem[], GM);
@@ -68,6 +61,7 @@ let latestFloorPriceDateTime = new Date();
 export let priceCLNYperONE = 0;
 export let priceONEperUSD = 0;
 export let priceCLNYperUSD = 0;
+export let priceSLPperUSD = 0;
 
 let currBlockNumCached = 0;
 export let totalTransactionValueCached = 0;
@@ -95,6 +89,21 @@ interface TokenBoughtListing {
 // cache every numMinutesCache in background (not upon query)
 (async () => {
   while (true) {
+    try {
+      const clnyPrices = await clnyLiquidityMining.methods
+        .getClnyPrice()
+        .call();
+
+      priceCLNYperONE = clnyPrices[0] * 1e-18;
+      priceONEperUSD =
+        (await clnyLiquidityMining.methods.getOnePrice().call()) * 1e-18;
+      priceCLNYperUSD = clnyPrices[1] * 1e-36;
+      priceSLPperUSD =
+        (await clnyLiquidityMining.methods.getSLPPrice().call()) * 1e-18;
+    } catch (error) {
+      console.log('pricing error', error);
+    }
+
     try {
       const numListings: number = await nftkeysMarketplaceContract.methods
         .numTokenListings(MarsColonyNFT)
@@ -188,23 +197,6 @@ interface TokenBoughtListing {
       console.log('nft pricing error', error);
     }
 
-    try {
-      const clnyInLiquidity =
-        (await CLNYTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
-      const oneInLiquidity =
-        (await WoneTokenContract.methods.balanceOf(CLNY_PAIR).call()) * 1e-18;
-      const usdcInUsdcLiquidity =
-        (await UsdcTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-6;
-      const oneInUsdcLiquidity =
-        (await WoneTokenContract.methods.balanceOf(USDC_PAIR).call()) * 1e-18;
-
-      priceCLNYperONE = oneInLiquidity / clnyInLiquidity;
-      priceONEperUSD = usdcInUsdcLiquidity / oneInUsdcLiquidity;
-      priceCLNYperUSD = priceCLNYperONE * priceONEperUSD;
-    } catch (error) {
-      console.log('pricing error', error);
-    }
-
     // getting total sales
     const latestBlockNum = await web3.eth.getBlockNumber();
 
@@ -275,9 +267,11 @@ export const getPrice = async (
 ): Promise<string> => {
   try {
     const priceResponse = `
-1 CLNY \\= **${escapeDot(priceCLNYperONE.toFixed(3))}** ONE
 1 ONE \\= **$${escapeDot(priceONEperUSD.toFixed(3))}** (WONE\\-1USDC pair)
-1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}**
+1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}** (**${escapeDot(
+      priceCLNYperONE.toFixed(3)
+    )} ONE**)
+1 SLP \\= **$${escapeDot(priceSLPperUSD.toFixed(3))}**
     `.trim();
 
     let cheaperStatement = '';
@@ -348,10 +342,7 @@ Total Sold: **${numSoldCached}**
     if (earningSpeedsArr.length > 0) {
       earningSpeedResponse = earningSpeedsArr
         .sort((a, b) => a.earningSpeed - b.earningSpeed)
-        .map(
-          (e) =>
-            `Earning Speed **${e.earningSpeed}** CLNY/day: **${e.count}** plots`
-        )
+        .map((e) => `**${e.earningSpeed}** CLNY/day: **${e.count}** plots`)
         .join('\n');
     }
 

@@ -34,15 +34,15 @@ export const getLiquidityMiningStats = async (
 
     return (
       `
-TVL = **$${numberWithCommas(escapeDot(tvlInUSD.toFixed(0)))}**
-APR = **${numberWithCommas(escapeDot(apr.toFixed(2)))}%**
-Daily Rewards = **${numberWithCommas(
+TVL \\= **$${numberWithCommas(escapeDot(tvlInUSD.toFixed(0)))}**
+APR \\= **${numberWithCommas(escapeDot(apr.toFixed(2)))}%**
+Daily Rewards \\= **${numberWithCommas(
         escapeDot(dailyCLNYRewards.toFixed(0))
       )} CLNY**
-Yearly Rewards = **$${numberWithCommas(
+Yearly Rewards \\= **$${numberWithCommas(
         escapeDot(yearlyDollarRewards.toFixed(0))
       )}**
-Locked SLP = **${numberWithCommas(escapeDot(lockedSLP.toFixed(0)))}**
+Locked SLP \\= **${numberWithCommas(escapeDot(lockedSLP.toFixed(0)))}**
     ` +
       (footer
         ? `
