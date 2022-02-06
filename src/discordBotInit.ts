@@ -2,7 +2,12 @@ import 'reflect-metadata';
 import { Intents, Interaction, Message } from 'discord.js';
 import { Client } from 'discordx';
 import { dirname, importx } from '@discordx/importer';
-import { DISCORD_BOT_TOKEN, DISCORD_REALTIME_CHANNEL_ID } from './secrets';
+import {
+  DISCORD_BOT_TOKEN,
+  DISCORD_REALTIME_CHANNEL_ID,
+  DISCORD_REALTIME_CHANNEL_WEBHOOK_ID,
+  DISCORD_REALTIME_CHANNEL_WEBHOOK_TOKEN,
+} from './secrets';
 import { updateRealtimeChannelPriceData } from './discord/webhookdata';
 
 const discordClient = new Client({
@@ -51,6 +56,31 @@ discordClient.on('interactionCreate', (interaction: Interaction) => {
 
 discordClient.on('messageCreate', (message: Message) => {
   discordClient.executeCommand(message);
+  const messageId = message.id;
+
+  const deletePrevWebhookMsges = async () => {
+    if (message.channelId === DISCORD_REALTIME_CHANNEL_ID) {
+      const realtimeChannel = discordClient.channels.cache.get(
+        DISCORD_REALTIME_CHANNEL_ID
+      );
+      if (realtimeChannel) {
+        const webhook = await realtimeChannel.client.fetchWebhook(
+          DISCORD_REALTIME_CHANNEL_WEBHOOK_ID,
+          DISCORD_REALTIME_CHANNEL_WEBHOOK_TOKEN
+        );
+
+        // in realtime webhook (should have just 1 updated message), delete all except current message
+        const msges = await message.channel.messages.fetch();
+        for (const msgEntry of msges.entries()) {
+          const [msgId, msg] = msgEntry;
+          if (msgId !== messageId) {
+            webhook.deleteMessage(msg);
+          }
+        }
+      }
+    }
+  };
+  deletePrevWebhookMsges();
 });
 
 export async function discordBotInit() {

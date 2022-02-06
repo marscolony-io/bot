@@ -1,5 +1,6 @@
 import { Client, ColorResolvable, MessageEmbed } from 'discord.js';
 import {
+  earningSpeedsArr,
   getPrice,
   latestFloorPrice,
   latestFloorPriceUpgraded,
@@ -40,12 +41,18 @@ const sectionsData: SectionData[] = [
   {
     colour: '#be744b',
     authorIconUrl: 'https://solarsystem.nasa.gov/internal_resources/3841/',
-    authorName: 'Floor Plot Data',
+    authorName: 'Floor Plot Prices',
   },
   {
     colour: '#dddc45',
     authorIconUrl: 'https://meta.marscolony.io/1.png',
-    authorName: 'Floor Plot Buying Comparison',
+    authorName: 'Floor Plots Buying Comparison',
+  },
+  {
+    colour: '#02628c',
+    authorIconUrl:
+      'https://img.icons8.com/external-filled-outline-wichaiwi/344/external-count-election-filled-outline-wichaiwi.png',
+    authorName: 'Listed Plots Earning Speed Comparison',
   },
   {
     colour: '#ffffff',
@@ -115,12 +122,13 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
   const priceData = await getPrice();
   const statsData = await getCLNYStats();
 
+  const priceDataSections = priceData.split('\n\n');
   return [
     new MessageEmbed()
       .setDescription(
         priceCLNYperONE === 0 || priceONEperUSD === 0 || priceCLNYperUSD === 0
           ? 'Fetching prices...'
-          : priceData.split('\n\n')[0]
+          : priceDataSections[0]
       )
       .setAuthor({
         name: sectionsData[0].authorName,
@@ -134,7 +142,7 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
           latestFloorPriceUpgraded === 0 ||
           numUpgradedPlots === 0
           ? 'Fetching plots data...'
-          : priceData.split('\n\n')[1]
+          : priceDataSections[1]
       )
       .setAuthor({
         name: sectionsData[1].authorName,
@@ -145,7 +153,7 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
       .setDescription(
         latestFloorPrice === 0 || latestFloorPriceUpgraded === 0
           ? 'Fetching plot comparison data...'
-          : priceData.split('\n\n')[2]
+          : priceDataSections[2]
       )
       .setAuthor({
         name: sectionsData[2].authorName,
@@ -154,9 +162,9 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
       .setColor(sectionsData[2].colour),
     new MessageEmbed()
       .setDescription(
-        totalTransactionValueCached === 0 || numSoldCached === 0
-          ? 'Fetching transactions data...'
-          : priceData.split('\n\n')[3]
+        earningSpeedsArr.length === 0
+          ? 'Fetching listed plots earning speeds...'
+          : priceDataSections[3]
       )
       .setAuthor({
         name: sectionsData[3].authorName,
@@ -164,11 +172,22 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
       })
       .setColor(sectionsData[3].colour),
     new MessageEmbed()
-      .setDescription(statsData)
+      .setDescription(
+        totalTransactionValueCached === 0 || numSoldCached === 0
+          ? 'Fetching transactions data...'
+          : priceDataSections[4]
+      )
       .setAuthor({
         name: sectionsData[4].authorName,
         iconURL: sectionsData[4].authorIconUrl,
       })
       .setColor(sectionsData[4].colour),
+    new MessageEmbed()
+      .setDescription(statsData)
+      .setAuthor({
+        name: sectionsData[5].authorName,
+        iconURL: sectionsData[5].authorIconUrl,
+      })
+      .setColor(sectionsData[5].colour),
   ];
 };
