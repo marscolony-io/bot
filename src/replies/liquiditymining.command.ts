@@ -25,10 +25,6 @@ export const getLiquidityMiningStats = async (
     const dailyCLNYRewards =
       (await clnyLiquidityMining.methods.getDailyClnyRewards().call()) * factor;
 
-    const yearlyDollarRewards =
-      (await clnyLiquidityMining.methods.getYearlyDollarRewards().call()) *
-      1e-54;
-
     const lockedSLP =
       (await clnyLiquidityMining.methods.getLockedSLP().call()) * factor;
 
@@ -39,9 +35,6 @@ APR \\= **${numberWithCommas(escapeDot(apr.toFixed(2)))}%**
 Daily Rewards \\= **${numberWithCommas(
         escapeDot(dailyCLNYRewards.toFixed(0))
       )} CLNY**
-Yearly Rewards \\= **$${numberWithCommas(
-        escapeDot(yearlyDollarRewards.toFixed(0))
-      )}**
 Locked SLP \\= **${numberWithCommas(escapeDot(lockedSLP.toFixed(0)))}**
     ` +
       (footer
