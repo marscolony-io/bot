@@ -80,6 +80,7 @@ const listingsBatchSize = 1024;
 
 interface PlotEarning {
   count: number;
+  countListed: number;
   earningSpeed: number;
 }
 
@@ -95,6 +96,42 @@ interface TokenBoughtListing {
 // cache every numMinutesCache in background (not upon query)
 (async () => {
   while (true) {
+    try {
+      const maxNum = 21000;
+      const minNum = 1;
+      const batchSize = 100;
+
+      for (let currIdx = minNum; currIdx < maxNum; currIdx += batchSize) {
+        const nftDataAll: AttributeData[] = await gm.methods
+          .getAttributesMany(
+            Array.from({ length: batchSize }, (_, i) => i + currIdx)
+          )
+          .call();
+
+        for (const nftData of nftDataAll) {
+          const earningSpeed = nftData.speed;
+
+          const idx = earningSpeedsArr.findIndex(
+            (e) => e.earningSpeed === earningSpeed
+          );
+          if (idx > -1) {
+            earningSpeedsArr[idx] = {
+              ...earningSpeedsArr[idx],
+              count: earningSpeedsArr[idx].count + 1,
+            };
+          } else {
+            earningSpeedsArr.push({
+              earningSpeed: earningSpeed,
+              count: 1,
+              countListed: 0,
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.log(e);
+    }
+
     try {
       const numListings: number = await nftkeysMarketplaceContract.methods
         .numTokenListings(MarsColonyNFT)
@@ -138,12 +175,13 @@ interface TokenBoughtListing {
               if (idx > -1) {
                 earningSpeedsArrTemp[idx] = {
                   ...earningSpeedsArrTemp[idx],
-                  count: earningSpeedsArrTemp[idx].count + 1,
+                  countListed: earningSpeedsArrTemp[idx].count + 1,
                 };
               } else {
                 earningSpeedsArrTemp.push({
                   earningSpeed: earningSpeed,
-                  count: 1,
+                  count: 0,
+                  countListed: 1,
                 });
               }
 
@@ -345,12 +383,17 @@ Total Sold: **${numSoldCached}**
     }
 
     let earningSpeedResponse = ``;
-    if (earningSpeedsArr.length > 0) {
+    if (
+      earningSpeedsArr.length > 0 &&
+      earningSpeedsArr.every((e) => e.count > 0)
+    ) {
       earningSpeedResponse = earningSpeedsArr
         .sort((a, b) => a.earningSpeed - b.earningSpeed)
         .map(
           (e) =>
-            `Earning Speed **${e.earningSpeed}** CLNY/day: **${e.count}** plots`
+            `**${e.earningSpeed}** CLNY/day: **${e.count}** plots${
+              e.countListed > 0 ? ` (**${e.countListed}** for sale)` : ''
+            }`
         )
         .join('\n');
     }
