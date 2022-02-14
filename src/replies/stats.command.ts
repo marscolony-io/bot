@@ -26,22 +26,18 @@ export const getCLNYStats = async (footer?: any): Promise<string> => {
       (await clny.methods.balanceOf(CLNY_LIQUIDITY).call()) * factor;
 
     clnyLiquidity +=
-      (await clny.methods.balanceOf(CLNY_LIQUIDITY_BUFFER).call()) *
-      factor;
+      (await clny.methods.balanceOf(CLNY_LIQUIDITY_BUFFER).call()) * factor;
 
-    const circulatingClny =
-      clnyTotalSupply -
-      clnyTreasury -
-      clnyLiquidity;
+    const circulatingClny = clnyTotalSupply - clnyTreasury - clnyLiquidity;
 
     return (
       `
 Current total supply of CLNY: **${numberWithCommas(
-        escapeDot(clnyTotalSupply.toFixed(3))
+        escapeDot(clnyTotalSupply.toFixed(0))
       )}**
-Circulating CLNY: **${numberWithCommas(escapeDot(circulatingClny.toFixed(3)))}**
-CLNY Treasury: **${numberWithCommas(escapeDot(clnyTreasury.toFixed(3)))}**
-CLNY Liquidity: **${numberWithCommas(escapeDot(clnyLiquidity.toFixed(3)))}**
+Circulating CLNY: **${numberWithCommas(escapeDot(circulatingClny.toFixed(0)))}**
+CLNY Treasury: **${numberWithCommas(escapeDot(clnyTreasury.toFixed(0)))}**
+CLNY Liquidity: **${numberWithCommas(escapeDot(clnyLiquidity.toFixed(0)))}**
     ` +
       (footer
         ? `

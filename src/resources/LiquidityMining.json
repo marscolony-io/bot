@@ -1,0 +1,118 @@
+{
+  "abi": [
+    {
+      "stateMutability": "nonpayable",
+      "inputs": [],
+      "type": "constructor"
+    },
+    {
+      "name": "getOnePrice",
+      "inputs": [],
+      "stateMutability": "view",
+      "outputs": [
+        {
+          "name": "",
+          "internalType": "uint256",
+          "type": "uint256"
+        }
+      ],
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "type": "function",
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        },
+        {
+          "type": "uint256",
+          "name": "",
+          "internalType": "uint256"
+        }
+      ],
+      "name": "getClnyPrice",
+      "stateMutability": "view"
+    },
+    {
+      "name": "getSLPPrice",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "type": "function",
+      "stateMutability": "view",
+      "inputs": []
+    },
+    {
+      "type": "function",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "internalType": "uint256",
+          "type": "uint256"
+        }
+      ],
+      "name": "getDollarTVL",
+      "stateMutability": "view"
+    },
+    {
+      "inputs": [],
+      "name": "getDailyClnyRewards",
+      "type": "function",
+      "outputs": [
+        {
+          "name": "",
+          "internalType": "uint256",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "getYearlyDollarRewards",
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "",
+          "type": "uint256",
+          "internalType": "uint256"
+        }
+      ],
+      "stateMutability": "view"
+    },
+    {
+      "stateMutability": "view",
+      "outputs": [
+        {
+          "type": "uint256",
+          "internalType": "uint256",
+          "name": ""
+        }
+      ],
+      "type": "function",
+      "name": "getLockedSLP",
+      "inputs": []
+    },
+    {
+      "outputs": [
+        {
+          "type": "uint256",
+          "internalType": "uint256",
+          "name": ""
+        }
+      ],
+      "type": "function",
+      "stateMutability": "view",
+      "name": "getAPR",
+      "inputs": []
+    }
+  ]
+}
