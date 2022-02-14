@@ -298,7 +298,7 @@ export const getPrice = async (
     ) {
       floorResponse = `Plot floor price: **${latestFloorPrice.toFixed(
         0
-      )}** ONE $${(priceONEperUSD * latestFloorPrice).toFixed(0)} ${escapeDot(
+      )}** ONE \\= $${(priceONEperUSD * latestFloorPrice).toFixed(0)} \\= ${escapeDot(
         (latestFloorPrice / priceCLNYperONE).toFixed(0)
       )} CLNY`;
 
@@ -306,9 +306,9 @@ export const getPrice = async (
         floorResponse += `
 Upgraded Plot floor price: **${latestFloorPriceUpgraded.toFixed(
           0
-        )}** ONE $${(
+        )}** ONE \\= $${(
           priceONEperUSD * latestFloorPriceUpgraded
-        ).toFixed(0)} ${escapeDot(
+        ).toFixed(0)} \\= ${escapeDot(
           (latestFloorPriceUpgraded / priceCLNYperONE).toFixed(0)
         )} CLNY (id ${lowestUpgradedTokenId})
 **${
