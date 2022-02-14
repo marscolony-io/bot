@@ -267,11 +267,11 @@ export const getPrice = async (
 ): Promise<string> => {
   try {
     const priceResponse = `
-1 ONE \\= **$${escapeDot(priceONEperUSD.toFixed(3))}** (WONE\\-1USDC pair)
-1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}** (**${escapeDot(
+1 ONE \\= **$${escapeDot(priceONEperUSD.toFixed(3))}**
+1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}** \\= **${escapeDot(
       priceCLNYperONE.toFixed(3)
-    )} ONE**)
-1 SLP \\= **$${escapeDot(priceSLPperUSD.toFixed(3))}**
+    )} ONE**
+1 SLP \\~ **$${escapeDot(priceSLPperUSD.toFixed(3))}**
     `.trim();
 
     let cheaperStatement = '';
@@ -298,19 +298,19 @@ export const getPrice = async (
     ) {
       floorResponse = `Plot floor price: **${latestFloorPrice.toFixed(
         0
-      )}** ONE ($${(priceONEperUSD * latestFloorPrice).toFixed(0)}, ${escapeDot(
-        (latestFloorPrice / priceCLNYperONE).toFixed(3)
-      )} CLNY)`;
+      )}** ONE $${(priceONEperUSD * latestFloorPrice).toFixed(0)} ${escapeDot(
+        (latestFloorPrice / priceCLNYperONE).toFixed(0)
+      )} CLNY`;
 
       if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
         floorResponse += `
 Upgraded Plot floor price: **${latestFloorPriceUpgraded.toFixed(
           0
-        )}** ONE (id ${lowestUpgradedTokenId}, $${(
+        )}** ONE $${(
           priceONEperUSD * latestFloorPriceUpgraded
-        ).toFixed(0)}, ${escapeDot(
-          (latestFloorPriceUpgraded / priceCLNYperONE).toFixed(3)
-        )} CLNY)
+        ).toFixed(0)} ${escapeDot(
+          (latestFloorPriceUpgraded / priceCLNYperONE).toFixed(0)
+        )} CLNY (id ${lowestUpgradedTokenId})
 **${
           numUnupgradedPlots + numUpgradedPlots
         }** total plots available, **${numUpgradedPlots}** of them upgraded`;
@@ -338,9 +338,9 @@ Total Sold: **${numSoldCached}**
         `;
     }
 
-    let earningSpeedResponse = ``;
+    let earningSpeedResponse = '';
     if (earningSpeedsArr.length > 0) {
-      earningSpeedResponse = earningSpeedsArr
+      earningSpeedResponse = '*Listed on NFTKey*\n' + earningSpeedsArr
         .sort((a, b) => a.earningSpeed - b.earningSpeed)
         .map((e) => `**${e.earningSpeed}** CLNY/day: **${e.count}** plots`)
         .join('\n');
