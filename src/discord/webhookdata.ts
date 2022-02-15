@@ -15,6 +15,7 @@ import { getCLNYStats } from '../replies/stats.command';
 import {
   DISCORD_REALTIME_CHANNEL_ID,
   DISCORD_REALTIME_CHANNEL_WEBHOOK_ID,
+  DISCORD_REALTIME_CHANNEL_WEBHOOK_MESSAGE_ID,
   DISCORD_REALTIME_CHANNEL_WEBHOOK_TOKEN,
 } from '../secrets';
 
@@ -73,19 +74,11 @@ export const updateRealtimeChannelPriceData = async (discordClient: Client) => {
       );
 
       try {
-        let embedMessage = await getEmbedMessage();
-        const priceMessage = await webhook.send({
-          username: username,
-          avatarURL: avatarUrl,
-          embeds: embedMessage,
-        });
-        const priceMessageId = priceMessage.id;
-
         (async () => {
           while (true) {
             try {
               let embedMessage = await getEmbedMessage();
-              webhook.editMessage(priceMessageId, {
+              webhook.editMessage(DISCORD_REALTIME_CHANNEL_WEBHOOK_MESSAGE_ID, {
                 embeds: embedMessage,
               });
 
