@@ -30,7 +30,9 @@ export const getLiquidityMiningStats = async (
 
     return (
       `
-TVL \\= **$${numberWithCommas(escapeDot(tvlInUSD.toFixed(0)))}** \\= **${numberWithCommas(escapeDot(lockedSLP.toFixed(0)))} SLP**
+TVL \\= **$${numberWithCommas(
+        escapeDot(tvlInUSD.toFixed(0))
+      )}** \\= **${numberWithCommas(escapeDot(lockedSLP.toFixed(0)))} SLP**
 APR \\= **${numberWithCommas(escapeDot(apr.toFixed(2)))}%**
 Daily Rewards \\= **${numberWithCommas(
         escapeDot(dailyCLNYRewards.toFixed(0))
@@ -44,6 +46,8 @@ ${footer}
     ).trim();
   } catch (error) {
     console.log(error);
-    return 'Loading CLNY Liquidity Mining Stats...\n\n' + footer;
+    return (
+      'Fetching liquidity mining data...' + (footer ? '\n\n' + footer : '')
+    );
   }
 };

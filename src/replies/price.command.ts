@@ -1,6 +1,5 @@
 import Web3 from 'web3';
 import {
-  CLNY,
   MarsColonyNFT,
   NFTKeysMarketplaceAddress,
   GM,
@@ -8,8 +7,8 @@ import {
 } from '../values';
 import LiquidityMining from '../resources/LiquidityMining.json';
 import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
-import ClnyArtefact from '../resources/CLNY.json';
 import GameManager from '../resources/GameManager.json';
+import MarsColony from '../resources/MC.json';
 import { AbiItem } from 'web3-utils';
 import { escapeBrackets, escapeDot } from '../utils/utils';
 
@@ -19,17 +18,14 @@ const nftkeysMarketplaceContract = new web3.eth.Contract(
   NFTKeysMarketplaceAddress
 );
 
-const CLNYTokenContract = new web3.eth.Contract(
-  ClnyArtefact.abi as AbiItem[],
-  CLNY
-);
-
 const clnyLiquidityMining = new web3.eth.Contract(
   LiquidityMining.abi as AbiItem[],
   CLNY_LiquidityMining
 );
 
 const gm = new web3.eth.Contract(GameManager.abi as AbiItem[], GM);
+
+const mc = new web3.eth.Contract(MarsColony.abi as AbiItem[], MarsColonyNFT);
 
 interface Listing {
   tokenId: number;
@@ -48,16 +44,6 @@ interface AttributeData {
 }
 
 // global variables for caching
-export let latestFloorPrice = 0;
-export let numUnupgradedPlots = 0;
-export let latestFloorPriceUpgraded = 0;
-export let numUpgradedPlots = 0;
-export let costBuyUpgradedInONE = 0;
-export let costBuyFloorAndUpgradeInONE = 0;
-
-let lowestUpgradedTokenId = 0;
-
-let latestFloorPriceDateTime = new Date();
 export let priceCLNYperONE = 0;
 export let priceONEperUSD = 0;
 export let priceCLNYperUSD = 0;
@@ -67,14 +53,19 @@ let currBlockNumCached = 0;
 export let totalTransactionValueCached = 0;
 export let numSoldCached = 0;
 
-export const numMinutesCache = 1;
-const batchSize = 20;
+export const numMinutesCache = 2;
 const divideConst = 1e18;
 const listingsBatchSize = 1024;
+
+const maxNumPlots = 21000;
+const minNumPlots = 1;
+const batchSizePlots = 100;
 
 interface PlotEarning {
   count: number;
   earningSpeed: number;
+  countListed: number;
+  floorPrice: number;
 }
 
 export let earningSpeedsArr: PlotEarning[] = [];
@@ -104,26 +95,64 @@ interface TokenBoughtListing {
       console.log('pricing error', error);
     }
 
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 * 60 * numMinutesCache)
+    );
+  }
+})();
+
+(async () => {
+  while (true) {
     try {
+      const earningSpeedsArrTemp: PlotEarning[] = [];
+
+      // all plots
+      for (
+        let currIdx = minNumPlots;
+        currIdx < maxNumPlots;
+        currIdx += batchSizePlots
+      ) {
+        const nftDataAll: AttributeData[] = await gm.methods
+          .getAttributesMany(
+            Array.from({ length: batchSizePlots }, (_, i) => i + currIdx)
+          )
+          .call();
+
+        for (const nftData of nftDataAll) {
+          const earningSpeed = nftData.speed;
+
+          const idx = earningSpeedsArrTemp.findIndex(
+            (e) => e.earningSpeed === earningSpeed
+          );
+          if (idx > -1) {
+            earningSpeedsArrTemp[idx] = {
+              ...earningSpeedsArrTemp[idx],
+              count: earningSpeedsArrTemp[idx].count + 1,
+            };
+          } else {
+            earningSpeedsArrTemp.push({
+              earningSpeed: earningSpeed,
+              count: 1,
+              countListed: 0,
+              floorPrice: 0,
+            });
+          }
+        }
+      }
+
+      // plots for sale
       const numListings: number = await nftkeysMarketplaceContract.methods
         .numTokenListings(MarsColonyNFT)
         .call();
 
       let currBatchCount = 0;
-      let floorPrice = Number.MAX_VALUE;
-      let floorPriceUpgraded = Number.MAX_VALUE;
-      let startingIdx = 1 + currBatchCount * batchSize;
-
-      let numUpgradedPlotsTemp = 0;
-      let numUnupgradedPlotsTemp = 0;
-
-      const earningSpeedsArrTemp: PlotEarning[] = [];
+      let startingIdx = 1 + currBatchCount * batchSizePlots;
 
       while (startingIdx <= numListings) {
         try {
           const tokenListings: Listing[] =
             await nftkeysMarketplaceContract.methods
-              .getTokenListings(MarsColonyNFT, startingIdx, batchSize)
+              .getTokenListings(MarsColonyNFT, startingIdx, batchSizePlots)
               .call();
 
           // value 0 = not listed
@@ -135,61 +164,36 @@ interface TokenBoughtListing {
             .getAttributesMany(tokenListingsListed.map((t) => t.tokenId))
             .call();
 
-          for (const idx in tokenListingsListed) {
-            const y = tokenListingsListed[idx];
-            const price = y.value / divideConst;
-            const earningSpeed = nftData[idx].speed;
+          for (const i in tokenListingsListed) {
+            const t = tokenListingsListed[i];
+            const price = t.value / divideConst;
+
+            const earningSpeed = nftData[i].speed;
 
             if (price !== 0) {
               const idx = earningSpeedsArrTemp.findIndex(
                 (e) => e.earningSpeed === earningSpeed
               );
               if (idx > -1) {
+                const e = earningSpeedsArrTemp[idx];
                 earningSpeedsArrTemp[idx] = {
-                  ...earningSpeedsArrTemp[idx],
-                  count: earningSpeedsArrTemp[idx].count + 1,
+                  ...e,
+                  countListed: e.countListed + 1,
+                  floorPrice:
+                    e.floorPrice === 0 ? price : Math.min(e.floorPrice, price),
                 };
-              } else {
-                earningSpeedsArrTemp.push({
-                  earningSpeed: earningSpeed,
-                  count: 1,
-                });
-              }
-
-              if (earningSpeed > 1) {
-                numUpgradedPlotsTemp++;
-                if (price < floorPriceUpgraded) {
-                  floorPriceUpgraded = price;
-                  lowestUpgradedTokenId = y.tokenId;
-                }
-              } else {
-                numUnupgradedPlotsTemp++;
-                if (price < floorPrice) {
-                  floorPrice = price;
-                }
               }
             }
           }
 
           currBatchCount++;
-          startingIdx = 1 + currBatchCount * batchSize;
+          startingIdx = 1 + currBatchCount * batchSizePlots;
         } catch (error) {
           console.log(error);
           await new Promise((resolve) => setTimeout(resolve, 1000)); // wait before retry if looping through listings fails
           continue;
         }
       }
-
-      latestFloorPriceDateTime = new Date();
-      latestFloorPrice = floorPrice;
-      latestFloorPriceUpgraded = floorPriceUpgraded;
-
-      numUpgradedPlots = numUpgradedPlotsTemp;
-      numUnupgradedPlots = numUnupgradedPlotsTemp;
-
-      costBuyUpgradedInONE = latestFloorPriceUpgraded;
-      costBuyFloorAndUpgradeInONE = latestFloorPrice + 30 * priceCLNYperONE;
-
       earningSpeedsArr = earningSpeedsArrTemp;
     } catch (error) {
       // should not have error unless numTokenListings has error
@@ -197,6 +201,14 @@ interface TokenBoughtListing {
       console.log('nft pricing error', error);
     }
 
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 * 60 * numMinutesCache)
+    );
+  }
+})();
+
+(async () => {
+  while (true) {
     // getting total sales
     const latestBlockNum = await web3.eth.getBlockNumber();
 
@@ -205,9 +217,9 @@ interface TokenBoughtListing {
 
     // for caching purposes
     // TODO store this in db / json file
-    let currBlockNum = 22170360;
-    let totalTransactionValue = 16946838.806685008;
-    let numSold = 6581;
+    let currBlockNum = 23008183;
+    let totalTransactionValue = 22669699.043509007;
+    let numSold = 8738;
 
     while (currBlockNum < latestBlockNum) {
       const toBlock = Math.min(
@@ -274,55 +286,29 @@ export const getPrice = async (
 1 SLP \\~ **$${escapeDot(priceSLPperUSD.toFixed(3))}**
     `.trim();
 
-    let cheaperStatement = '';
-    if (costBuyUpgradedInONE < costBuyFloorAndUpgradeInONE) {
-      cheaperStatement = `It is currently cheaper to buy an upgraded plot (**${escapeDot(
-        costBuyUpgradedInONE.toFixed(3)
-      )}** ONE) than to buy the cheapest plot and upgrade (**${escapeDot(
-        costBuyFloorAndUpgradeInONE.toFixed(3)
-      )}** ONE)`;
-    } else if (costBuyUpgradedInONE > costBuyFloorAndUpgradeInONE) {
-      cheaperStatement = `It is currently cheaper to buy the cheapest plot and upgrade (**${escapeDot(
-        costBuyFloorAndUpgradeInONE.toFixed(3)
-      )}** ONE) than to buy an upgraded plot (**${escapeDot(
-        costBuyUpgradedInONE.toFixed(3)
-      )}** ONE)`;
-    }
-
-    const latestCachedDataToShowInMinutes = 5;
-    let floorResponse = '';
-    if (
-      latestFloorPrice > 0 &&
-      new Date().getTime() - latestFloorPriceDateTime.getTime() <
-        1000 * 60 * latestCachedDataToShowInMinutes
-    ) {
-      floorResponse = `Plot floor price: **${latestFloorPrice.toFixed(
-        0
-      )}** ONE \\= $${(priceONEperUSD * latestFloorPrice).toFixed(0)} \\= ${escapeDot(
-        (latestFloorPrice / priceCLNYperONE).toFixed(0)
-      )} CLNY`;
-
-      if (latestFloorPriceUpgraded > 0 && lowestUpgradedTokenId !== 0) {
-        floorResponse += `
-Upgraded Plot floor price: **${latestFloorPriceUpgraded.toFixed(
-          0
-        )}** ONE \\= $${(
-          priceONEperUSD * latestFloorPriceUpgraded
-        ).toFixed(0)} \\= ${escapeDot(
-          (latestFloorPriceUpgraded / priceCLNYperONE).toFixed(0)
-        )} CLNY (id ${lowestUpgradedTokenId})
-**${
-          numUnupgradedPlots + numUpgradedPlots
-        }** total plots available, **${numUpgradedPlots}** of them upgraded`;
-
-        if (cheaperStatement !== '') {
-          floorResponse += `
-
-${cheaperStatement}`;
-        }
-      }
-    } else {
-      floorResponse = 'Error fetching NFT floor price';
+    let earningSpeedResponse = '';
+    if (earningSpeedsArr.length > 0) {
+      earningSpeedResponse =
+        'Listings from NFTKey\n' +
+        earningSpeedsArr
+          .sort((a, b) => a.earningSpeed - b.earningSpeed)
+          .map(
+            (e) =>
+              `**${e.earningSpeed}** CLNY/day: **${e.count}** plots${
+                e.countListed > 0
+                  ? ` (**${
+                      e.countListed
+                    }** listed, floor price **${e.floorPrice.toFixed(
+                      0
+                    )}** ONE \\= $${(priceONEperUSD * e.floorPrice).toFixed(
+                      0
+                    )} \\= ${escapeDot(
+                      (e.floorPrice / priceCLNYperONE).toFixed(0)
+                    )} CLNY)`
+                  : ''
+              }`
+          )
+          .join('\n');
     }
 
     let totalTransactionsResponse = '';
@@ -338,19 +324,9 @@ Total Sold: **${numSoldCached}**
         `;
     }
 
-    let earningSpeedResponse = '';
-    if (earningSpeedsArr.length > 0) {
-      earningSpeedResponse = '*Listed on NFTKey*\n' + earningSpeedsArr
-        .sort((a, b) => a.earningSpeed - b.earningSpeed)
-        .map((e) => `**${e.earningSpeed}** CLNY/day: **${e.count}** plots`)
-        .join('\n');
-    }
-
     const response = escapeBrackets(
       `
 ${priceResponse}
-
-${floorResponse}
 
 ${earningSpeedResponse}
 
@@ -372,6 +348,6 @@ ${footer}
       return response;
     }
   } catch {
-    return 'Error\n\n' + footer;
+    return 'Fetching prices...' + footer ? '\n\n' + footer : '';
   }
 };
