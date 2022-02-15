@@ -63,6 +63,7 @@ const batchSizePlots = 100;
 
 interface PlotEarning {
   count: number;
+  countListed: number;
   earningSpeed: number;
   countListed: number;
   floorPrice: number;
