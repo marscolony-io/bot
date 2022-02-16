@@ -47,6 +47,6 @@ ${footer}
     ).trim();
   } catch (error) {
     console.log(error);
-    return 'Loading CLNY statistics...\n\n' + footer;
+    return 'Fetching CLNY statistics...\n\n' + footer;
   }
 };

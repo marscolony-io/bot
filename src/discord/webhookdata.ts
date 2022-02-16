@@ -3,12 +3,8 @@ import { getLiquidityMiningStats } from '../replies/liquiditymining.command';
 import {
   earningSpeedsArr,
   getPrice,
-  latestFloorPrice,
-  latestFloorPriceUpgraded,
   numMinutesCache,
   numSoldCached,
-  numUnupgradedPlots,
-  numUpgradedPlots,
   priceCLNYperONE,
   priceCLNYperUSD,
   priceONEperUSD,
@@ -19,6 +15,7 @@ import { getCLNYStats } from '../replies/stats.command';
 import {
   DISCORD_REALTIME_CHANNEL_ID,
   DISCORD_REALTIME_CHANNEL_WEBHOOK_ID,
+  DISCORD_REALTIME_CHANNEL_WEBHOOK_MESSAGE_ID,
   DISCORD_REALTIME_CHANNEL_WEBHOOK_TOKEN,
 } from '../secrets';
 
@@ -41,20 +38,9 @@ const sectionsData: SectionData[] = [
     authorName: 'Token Prices',
   },
   {
-    colour: '#be744b',
-    authorIconUrl: 'https://solarsystem.nasa.gov/internal_resources/3841/',
-    authorName: 'Floor Plot Prices',
-  },
-  {
-    colour: '#dddc45',
+    colour: '#774455',
     authorIconUrl: 'https://meta.marscolony.io/1.png',
-    authorName: 'Floor Plots Buying Comparison',
-  },
-  {
-    colour: '#02628c',
-    authorIconUrl:
-      'https://img.icons8.com/external-filled-outline-wichaiwi/344/external-count-election-filled-outline-wichaiwi.png',
-    authorName: 'Listed Plots Earning Speed Comparison',
+    authorName: 'Plots Data',
   },
   {
     colour: '#ffffff',
@@ -69,7 +55,7 @@ const sectionsData: SectionData[] = [
     authorName: 'CLNY Statistics',
   },
   {
-    colour: '#000000',
+    colour: '#2f5496',
     authorIconUrl:
       'https://assets-global.website-files.com/606f63778ec431ec1b930f1f/6078617f66171f30133f2d65_image-asset%20(4).png',
     authorName: 'CLNY Liquidity Mining',
@@ -88,19 +74,11 @@ export const updateRealtimeChannelPriceData = async (discordClient: Client) => {
       );
 
       try {
-        let embedMessage = await getEmbedMessage();
-        const priceMessage = await webhook.send({
-          username: username,
-          avatarURL: avatarUrl,
-          embeds: embedMessage,
-        });
-        const priceMessageId = priceMessage.id;
-
         (async () => {
           while (true) {
             try {
               let embedMessage = await getEmbedMessage();
-              webhook.editMessage(priceMessageId, {
+              webhook.editMessage(DISCORD_REALTIME_CHANNEL_WEBHOOK_MESSAGE_ID, {
                 embeds: embedMessage,
               });
 
@@ -108,9 +86,7 @@ export const updateRealtimeChannelPriceData = async (discordClient: Client) => {
                 setTimeout(resolve, 1000 * 60 * numMinutesCache)
               );
             } catch (err) {
-              console.log(
-                'getPrice / getCLNYStats / webhook edit message error'
-              );
+              console.log('webhook edit message error');
               console.log(err);
             }
           }
@@ -118,11 +94,19 @@ export const updateRealtimeChannelPriceData = async (discordClient: Client) => {
       } catch (embedMessageErr) {
         console.log('fetching embed message error');
         console.log(embedMessageErr);
+
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * 60 * numMinutesCache)
+        );
       }
     }
   } catch (err) {
     console.log('webhook error');
     console.log(err);
+
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 * 60 * numMinutesCache)
+    );
   }
 };
 
@@ -132,6 +116,7 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
   const liquidityMiningData = await getLiquidityMiningStats();
 
   const priceDataSections = priceData.split('\n\n');
+
   return [
     new MessageEmbed()
       .setDescription(
@@ -147,66 +132,45 @@ const getEmbedMessage = async (): Promise<MessageEmbed[]> => {
         iconURL: sectionsData[0].authorIconUrl,
       })
       .setColor(sectionsData[0].colour),
+
     new MessageEmbed()
       .setDescription(
-        latestFloorPrice === 0 ||
-          numUnupgradedPlots === 0 ||
-          latestFloorPriceUpgraded === 0 ||
-          numUpgradedPlots === 0
-          ? 'Fetching plots data...'
-          : priceDataSections[1]
+        (earningSpeedsArr.length > 0 && priceDataSections[1]) ||
+          'Fetching plots data...'
       )
       .setAuthor({
         name: sectionsData[1].authorName,
         iconURL: sectionsData[1].authorIconUrl,
       })
       .setColor(sectionsData[1].colour),
+
     new MessageEmbed()
       .setDescription(
-        latestFloorPrice === 0 || latestFloorPriceUpgraded === 0
-          ? 'Fetching plot comparison data...'
-          : priceDataSections[2]
+        (totalTransactionValueCached > 0 &&
+          numSoldCached > 0 &&
+          priceDataSections[2]) ||
+          'Fetching transactions data...'
       )
       .setAuthor({
         name: sectionsData[2].authorName,
         iconURL: sectionsData[2].authorIconUrl,
       })
       .setColor(sectionsData[2].colour),
+
     new MessageEmbed()
-      .setDescription(
-        earningSpeedsArr.length === 0
-          ? 'Fetching listed plots earning speeds...'
-          : priceDataSections[3]
-      )
+      .setDescription(statsData)
       .setAuthor({
         name: sectionsData[3].authorName,
         iconURL: sectionsData[3].authorIconUrl,
       })
       .setColor(sectionsData[3].colour),
+
     new MessageEmbed()
-      .setDescription(
-        totalTransactionValueCached === 0 || numSoldCached === 0
-          ? 'Fetching transactions data...'
-          : priceDataSections[4]
-      )
+      .setDescription(liquidityMiningData)
       .setAuthor({
         name: sectionsData[4].authorName,
         iconURL: sectionsData[4].authorIconUrl,
       })
       .setColor(sectionsData[4].colour),
-    new MessageEmbed()
-      .setDescription(statsData)
-      .setAuthor({
-        name: sectionsData[5].authorName,
-        iconURL: sectionsData[5].authorIconUrl,
-      })
-      .setColor(sectionsData[5].colour),
-    new MessageEmbed()
-      .setDescription(liquidityMiningData)
-      .setAuthor({
-        name: sectionsData[6].authorName,
-        iconURL: sectionsData[6].authorIconUrl,
-      })
-      .setColor(sectionsData[6].colour),
   ];
 };
