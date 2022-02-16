@@ -44,7 +44,7 @@ bot.command(
   async (ctx: Context) => {
     liquidityMiningAnswer(
       ctx,
-      removeTripleLinebreaks(await getLiquidityMiningStats(telegramFooter))
+      '*Liquidity Mining Stats*\n\n' + removeTripleLinebreaks(await getLiquidityMiningStats(telegramFooter))
     );
   }
 );

@@ -30,12 +30,11 @@ export const getLiquidityMiningStats = async (
 
     return (
       `
-TVL \\= **$${numberWithCommas(escapeDot(tvlInUSD.toFixed(0)))}**
+TVL \\= **$${numberWithCommas(escapeDot(tvlInUSD.toFixed(0)))}** \\= **${numberWithCommas(escapeDot(lockedSLP.toFixed(0)))} SLP**
 APR \\= **${numberWithCommas(escapeDot(apr.toFixed(2)))}%**
 Daily Rewards \\= **${numberWithCommas(
         escapeDot(dailyCLNYRewards.toFixed(0))
       )} CLNY**
-Locked SLP \\= **${numberWithCommas(escapeDot(lockedSLP.toFixed(0)))}**
     ` +
       (footer
         ? `
