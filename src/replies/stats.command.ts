@@ -115,7 +115,7 @@ export const getCLNYStats = async (footer?: any): Promise<string> => {
 
     return (
       `
-Current total supply of CLNY (excluding burned CLNY): **${numberWithCommas(
+Current total supply of CLNY \\(excluding burned CLNY\\): **${numberWithCommas(
         escapeDot(clnyTotalSupply.toFixed(0))
       )}**
 Circulating CLNY: **${numberWithCommas(escapeDot(circulatingClny.toFixed(0)))}**
