@@ -11,6 +11,8 @@ import GameManager from '../resources/GameManager.json';
 import MarsColony from '../resources/MC.json';
 import { AbiItem } from 'web3-utils';
 import { escapeBrackets, escapeDot } from '../utils/utils';
+import { minNumPlots, maxNumPlots, batchSizePlots } from '../utils/constants';
+import { AttributeData } from '../types';
 
 const web3 = new Web3('https://api.harmony.one');
 const nftkeysMarketplaceContract = new web3.eth.Contract(
@@ -34,15 +36,6 @@ interface Listing {
   expireTimestamp: number;
 }
 
-interface AttributeData {
-  speed: number;
-  earned: number;
-  baseStation: number;
-  transport: number;
-  robotAssembly: number;
-  powerProduction: number;
-}
-
 // global variables for caching
 export let priceCLNYperONE = 0;
 export let priceONEperUSD = 0;
@@ -57,11 +50,7 @@ export const numMinutesCache = 2;
 const divideConst = 1e18;
 const listingsBatchSize = 1024;
 
-const maxNumPlots = 21000;
-const minNumPlots = 1;
-const batchSizePlots = 100;
-
-interface PlotEarning {
+export interface PlotEarning {
   count: number;
   countListed: number;
   earningSpeed: number;
