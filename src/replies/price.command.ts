@@ -198,67 +198,73 @@ interface TokenBoughtListing {
 
 (async () => {
   while (true) {
-    // getting total sales
-    const latestBlockNum = await web3.eth.getBlockNumber();
+    try {
+      // getting total sales
+      const latestBlockNum = await web3.eth.getBlockNumber();
 
-    // let currBlockNum = 20758264; // https://nftkey.app/marketplace-contracts/ -> Harmony Blockchain -> Transaction Hash -> Block Number
-    // let currBlockNum = 21413624; // through testing of very first transaction
+      // let currBlockNum = 20758264; // https://nftkey.app/marketplace-contracts/ -> Harmony Blockchain -> Transaction Hash -> Block Number
+      // let currBlockNum = 21413624; // through testing of very first transaction
 
-    // for caching purposes
-    // TODO store this in db / json file
-    let currBlockNum = 23008183;
-    let totalTransactionValue = 22669699.043509007;
-    let numSold = 8738;
+      // for caching purposes
+      // TODO store this in db / json file
+      let currBlockNum = 23008183;
+      let totalTransactionValue = 22669699.043509007;
+      let numSold = 8738;
 
-    while (currBlockNum < latestBlockNum) {
-      const toBlock = Math.min(
-        currBlockNum + listingsBatchSize - 1,
-        latestBlockNum
-      );
-
-      const events = await nftkeysMarketplaceContract.getPastEvents(
-        'TokenBought',
-        {
-          fromBlock: currBlockNum,
-          toBlock: toBlock,
-          address: NFTKeysMarketplaceAddress,
-          filter: {
-            erc721Address: MarsColonyNFT,
-          },
-        }
-      );
-
-      if (events && events.length > 0) {
-        const tokensBoughtData = events.map(
-          (e) => e.returnValues.listing as TokenBoughtListing
+      while (currBlockNum < latestBlockNum) {
+        const toBlock = Math.min(
+          currBlockNum + listingsBatchSize - 1,
+          latestBlockNum
         );
-        const tokensPricesBought = tokensBoughtData.map((t) => {
-          const tokenId = Number(t.tokenId);
-          if (tokenId > 21000 || tokenId < 1) {
-            console.log('ERROR:', t.tokenId, Number(t.value) / divideConst);
-            return 0;
-          }
-          return Number(t.value) / divideConst;
-        });
 
-        for (const t of tokensPricesBought) {
-          if (t > 0) {
-            numSold++;
-            totalTransactionValue += t;
+        const events = await nftkeysMarketplaceContract.getPastEvents(
+          'TokenBought',
+          {
+            fromBlock: currBlockNum,
+            toBlock: toBlock,
+            address: NFTKeysMarketplaceAddress,
+            filter: {
+              erc721Address: MarsColonyNFT,
+            },
+          }
+        );
+
+        if (events && events.length > 0) {
+          const tokensBoughtData = events.map(
+            (e) => e.returnValues.listing as TokenBoughtListing
+          );
+          const tokensPricesBought = tokensBoughtData.map((t) => {
+            const tokenId = Number(t.tokenId);
+            if (tokenId > 21000 || tokenId < 1) {
+              console.log('ERROR:', t.tokenId, Number(t.value) / divideConst);
+              return 0;
+            }
+            return Number(t.value) / divideConst;
+          });
+
+          for (const t of tokensPricesBought) {
+            if (t > 0) {
+              numSold++;
+              totalTransactionValue += t;
+            }
           }
         }
+
+        currBlockNum = toBlock + 1;
       }
 
-      currBlockNum = toBlock + 1;
+      currBlockNumCached = currBlockNum;
+      totalTransactionValueCached = totalTransactionValue;
+      numSoldCached = numSold;
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000 * 60 * numMinutesCache)
+      );
+    } catch {
+      await new Promise((resolve) =>
+        setTimeout(resolve, 1000 * 10)
+      );
     }
-
-    currBlockNumCached = currBlockNum;
-    totalTransactionValueCached = totalTransactionValue;
-    numSoldCached = numSold;
-
-    await new Promise((resolve) =>
-      setTimeout(resolve, 1000 * 60 * numMinutesCache)
-    );
   }
 })();
 
