@@ -5,14 +5,15 @@ import {
   GM,
   CLNY_LiquidityMining,
 } from '../values';
-import LiquidityMining from '../resources/LiquidityMining.json';
-import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
-import GameManager from '../resources/GameManager.json';
-import MarsColony from '../resources/MC.json';
+import LiquidityMining from '../resources/LiquidityMining.json' assert {type: 'json'};
+import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json' assert {type: 'json'}; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
+import GameManager from '../resources/GameManager.json' assert {type: 'json'};
+import MarsColony from '../resources/MC.json' assert {type: 'json'};
 import { AbiItem } from 'web3-utils';
 import { escapeBrackets, escapeDot } from '../utils/utils';
 import { minNumPlots, maxNumPlots, batchSizePlots } from '../utils/constants';
 import { AttributeData } from '../types';
+import { getOneRate } from '../utils/one-usdt-rate';
 
 const web3 = new Web3('https://api.harmony.one');
 const nftkeysMarketplaceContract = new web3.eth.Contract(
@@ -75,11 +76,9 @@ interface TokenBoughtListing {
         .call();
 
       priceCLNYperONE = clnyPrices[0] * 1e-18;
-      priceONEperUSD =
-        (await clnyLiquidityMining.methods.getOnePrice().call()) * 1e-18;
-      priceCLNYperUSD = clnyPrices[1] * 1e-36;
-      priceSLPperUSD =
-        (await clnyLiquidityMining.methods.getSLPPrice().call()) * 1e-18;
+      priceONEperUSD = await getOneRate();
+      priceCLNYperUSD = priceCLNYperONE * priceONEperUSD;
+      // priceSLPperUSD = (await clnyLiquidityMining.methods.getSLPPrice().call()) * 1e-18;
     } catch (error) {
       console.log('pricing error', error);
     }
@@ -278,7 +277,6 @@ export const getPrice = async (
 1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}** \\= **${escapeDot(
       priceCLNYperONE.toFixed(3)
     )} ONE**
-1 SLP \\~ **$${escapeDot(priceSLPperUSD.toFixed(3))}**
     `.trim();
 
     let earningSpeedResponse = '';

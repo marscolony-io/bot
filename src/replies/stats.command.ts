@@ -6,11 +6,11 @@ import {
   CLNY_TREASURY,
   GM,
 } from '../values';
-import CLNY from '../resources/CLNY.json';
+import CLNY from '../resources/CLNY.json' assert {type: 'json'};
 import { AbiItem } from 'web3-utils';
 import { escapeDot, numberWithCommas } from '../utils/utils';
 import { numMinutesCache } from './price.command';
-import GameManager from '../resources/GameManager.json';
+import GameManager from '../resources/GameManager.json' assert {type: 'json'};
 import { minNumPlots, maxNumPlots, batchSizePlots } from '../utils/constants';
 import { AttributeData } from '../types';
 
