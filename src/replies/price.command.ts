@@ -274,9 +274,11 @@ export const getPrice = async (
 ): Promise<string> => {
   try {
     const priceResponse = `
-1 CLNY \\= **${escapeDot(
+1 ONE \\= **$${escapeDot(priceONEperUSD.toFixed(3))}**
+1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}** \\= **${escapeDot(
       priceCLNYperONE.toFixed(3)
     )} ONE**
+1 SLP \\~ **$${escapeDot(priceSLPperUSD.toFixed(3))}**
     `.trim();
 
     let earningSpeedResponse = '';
