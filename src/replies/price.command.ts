@@ -5,10 +5,10 @@ import {
   GM,
   CLNY_LiquidityMining,
 } from '../values';
-import LiquidityMining from '../resources/LiquidityMining.json' assert {type: 'json'};
-import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json' assert {type: 'json'}; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
-import GameManager from '../resources/GameManager.json' assert {type: 'json'};
-import MarsColony from '../resources/MC.json' assert {type: 'json'};
+import LiquidityMining from '../resources/LiquidityMining.json';
+import NFTKeyMarketplaceABI from '../resources/NFTKeyMarketplaceABI.json'; // from https://nftkey.app/marketplace-contracts/, see BSC / FTM / AVAX explorer for ABI
+import GameManager from '../resources/GameManager.json';
+import MarsColony from '../resources/MC.json';
 import { AbiItem } from 'web3-utils';
 import { escapeBrackets, escapeDot } from '../utils/utils';
 import { minNumPlots, maxNumPlots, batchSizePlots } from '../utils/constants';

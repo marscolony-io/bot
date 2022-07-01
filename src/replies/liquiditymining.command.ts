@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import { CLNY_LiquidityMining } from '../values';
-import LiquidityMining from '../resources/LiquidityMining.json' assert {type: 'json'};
+import LiquidityMining from '../resources/LiquidityMining.json';
 import { AbiItem } from 'web3-utils';
 import { escapeDot, numberWithCommas } from '../utils/utils';
 
