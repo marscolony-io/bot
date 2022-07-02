@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BINANCE_ENDPOINT = 'https://api.binance.com/api/v3/ticker/price?symbol=ONEUSDC';
+const BINANCE_ENDPOINT = 'https://api.binance.com/api/v3/ticker/price?symbol=ONEUSDT';
 
 const state = {
     lastCheck: 0,

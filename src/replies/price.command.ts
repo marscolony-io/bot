@@ -76,7 +76,11 @@ interface TokenBoughtListing {
         .call();
 
       priceCLNYperONE = clnyPrices[0] * 1e-18;
-      priceONEperUSD = await getOneRate();
+      console.log({ priceCLNYperONE });
+      
+      priceONEperUSD = +await getOneRate();
+      console.log({ priceONEperUSD });
+      
       priceCLNYperUSD = priceCLNYperONE * priceONEperUSD;
       // priceSLPperUSD = (await clnyLiquidityMining.methods.getSLPPrice().call()) * 1e-18;
     } catch (error) {
@@ -273,49 +277,49 @@ export const getPrice = async (
 ): Promise<string> => {
   try {
     const priceResponse = `
-1 ONE \\= **$${escapeDot(priceONEperUSD.toFixed(3))}**
-1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(3))}** \\= **${escapeDot(
-      priceCLNYperONE.toFixed(3)
+1 ONE \\= **$${escapeDot(priceONEperUSD.toFixed(5))}**
+1 CLNY \\= **$${escapeDot(priceCLNYperUSD.toFixed(5))}** \\= **${escapeDot(
+      priceCLNYperONE.toFixed(5)
     )} ONE**
     `.trim();
 
     let earningSpeedResponse = '';
-    if (earningSpeedsArr.length > 0) {
-      earningSpeedResponse =
-        'Listings from NFTKey\n' +
-        earningSpeedsArr
-          .sort((a, b) => a.earningSpeed - b.earningSpeed)
-          .map(
-            (e) =>
-              `**${e.earningSpeed}** CLNY/day: **${e.count}** plots${
-                e.countListed > 0
-                  ? ` (**${
-                      e.countListed
-                    }** listed, floor price **${e.floorPrice.toFixed(
-                      0
-                    )}** ONE \\= $${(priceONEperUSD * e.floorPrice).toFixed(
-                      0
-                    )} \\= ${escapeDot(
-                      (e.floorPrice / priceCLNYperONE).toFixed(0)
-                    )} CLNY)`
-                  : ''
-              }`
-          )
-          .join('\n');
-    }
+    // if (earningSpeedsArr.length > 0) {
+    //   earningSpeedResponse =
+    //     'Listings from NFTKey\n' +
+    //     earningSpeedsArr
+    //       .sort((a, b) => a.earningSpeed - b.earningSpeed)
+    //       .map(
+    //         (e) =>
+    //           `**${e.earningSpeed}** CLNY/day: **${e.count}** plots${
+    //             e.countListed > 0
+    //               ? ` (**${
+    //                   e.countListed
+    //                 }** listed, floor price **${e.floorPrice.toFixed(
+    //                   0
+    //                 )}** ONE \\= $${(priceONEperUSD * e.floorPrice).toFixed(
+    //                   0
+    //                 )} \\= ${escapeDot(
+    //                   (e.floorPrice / priceCLNYperONE).toFixed(0)
+    //                 )} CLNY)`
+    //               : ''
+    //           }`
+    //       )
+    //       .join('\n');
+    // }
 
-    let totalTransactionsResponse = '';
-    if (
-      currBlockNumCached > 0 &&
-      totalTransactionValueCached > 0 &&
-      numSoldCached > 0
-    ) {
-      totalTransactionsResponse = `Total Volume Traded: **${escapeDot(
-        (totalTransactionValueCached / 1e6).toFixed(1)
-      )}m** ONE
-Total Sold: **${numSoldCached}**
-        `;
-    }
+    let totalTransactionsResponse = 'Volumes: **under maintenance**\n';
+    // if (
+    //   currBlockNumCached > 0 &&
+    //   totalTransactionValueCached > 0 &&
+    //   numSoldCached > 0
+    // ) {
+//       totalTransactionsResponse = `Total Volume Traded: **${escapeDot(
+//         (totalTransactionValueCached / 1e6).toFixed(0)
+//       )}m** ONE
+// Total Sold: **${numSoldCached}**
+        // `;
+    // }
 
     const response = escapeBrackets(
       `

@@ -5,16 +5,16 @@ export const CONTRACT_TEXT = (footer?: any) =>
     `
 CONTRACTS:
 
-Land Plots MC ERC721:
+Harmony Land Plot NFT:
 \`${MarsColonyNFT}\`
 
-CLNY Token ERC20:
+Hamony CLNY Token:
 \`${CLNY}\`
 
-Game Manager:
+Harmony Game Manager:
 \`${GM}\`
 
-Harmony explorer: https://explorer\\.harmony\\.one/
+Polygon: **soon**
 ` +
     (footer
       ? `

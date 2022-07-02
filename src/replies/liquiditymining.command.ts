@@ -16,6 +16,7 @@ const factor = 1e-18;
 export const getLiquidityMiningStats = async (
   footer?: any
 ): Promise<string> => {
+  return 'Under maintenance';
   try {
     const apr = (await clnyLiquidityMining.methods.getAPR().call()) * 1e-16;
 
